@@ -1119,6 +1119,16 @@ describe('buildGuide', () => {
     expect(guide.downtime).toEqual(['Weapons (+5 max).'])
   })
 
+  it('não deixa título nem rótulo solto vazarem para o downtime', () => {
+    // O documento real começa com um Heading1 e tem um "Visual Map Legend"
+    // solto antes da tabela. Nenhum dos dois é item de downtime.
+    const blocks = baseBlocks([li(['MSQ'])])
+    blocks.unshift(heading('Heading1', 'Aion 2 Level 1–45 Ultimate Speedrun Guide'))
+    blocks.splice(4, 0, p(['Visual Map Legend']))
+    const guide = buildGuide(blocks, OPTS)
+    expect(guide.downtime).toEqual(['Weapons (+5 max).'])
+  })
+
   it('infere o tag pelo texto da ação', () => {
     const guide = buildGuide(
       baseBlocks([
@@ -1342,10 +1352,16 @@ export function buildGuide(blocks, options) {
       continue
     }
 
-    // Tudo antes da primeira fase alimenta a lista de downtime.
+    // Antes da primeira fase, só os itens de lista alimentam o downtime.
+    // O título do documento e o rótulo solto "Visual Map Legend" também
+    // vivem aqui e não têm numId — sem essa checagem, vazariam para dentro
+    // da lista. O sinal é o mesmo que separa item de parágrafo no resto
+    // do módulo, não uma lista de exceções por texto.
     if (!phase) {
-      for (const line of block.lines) {
-        if (!isHeaderLine(line)) downtime.push(line)
+      if (block.numId !== null) {
+        for (const line of block.lines) {
+          if (!isHeaderLine(line)) downtime.push(line)
+        }
       }
       continue
     }
@@ -1374,7 +1390,7 @@ export function buildGuide(blocks, options) {
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
 Run: `npx vitest run tests/guide-builder.test.mjs`
-Expected: PASS — 18 testes.
+Expected: PASS — 19 testes.
 
 - [ ] **Step 5: Rodar a suíte inteira**
 
