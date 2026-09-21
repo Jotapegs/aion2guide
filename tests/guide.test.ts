@@ -62,6 +62,18 @@ describe('parseGuide', () => {
     expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
   })
 
+  it('rejeita legenda com tag repetido, mesmo cobrindo os quatro', () => {
+    // Os quatro tags aparecem, mas 'msq' aparece duas vezes: cobrir não
+    // basta, tem que ser exatamente uma vez cada.
+    const raw = broken((g) => { g.legend.push({ ...g.legend[0] }) })
+    expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
+  })
+
+  it('rejeita map.src que começa com barra', () => {
+    const raw = broken((g) => { g.phases[1].parts[0].map.src = '/maps/image3.webp' })
+    expect(() => parseGuide(raw)).toThrow(/não deve começar com barra/)
+  })
+
   it('rejeita entrada que não é objeto', () => {
     expect(() => parseGuide(null)).toThrow(GuideError)
     expect(() => parseGuide('guia')).toThrow(GuideError)

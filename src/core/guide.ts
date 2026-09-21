@@ -157,7 +157,10 @@ function parseLegend(raw: unknown): LegendEntry[] {
     }
   })
   const ids = new Set(entries.map((e) => e.id))
-  if (ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
+  // Os três testes são distintos: sem o de comprimento, uma legenda com
+  // 'msq' repetido mais os outros três passaria — o conjunto teria os
+  // quatro tags, mas 'msq' não apareceria uma vez só.
+  if (entries.length !== TAGS.length || ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
     fail(`a legenda deve cobrir os quatro tags exatamente uma vez (${TAGS.join(', ')})`)
   }
   return entries
