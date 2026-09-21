@@ -8,6 +8,8 @@ export type CardHandlers = {
   onComplete(): void
   onToggleAction(actionId: string): void
   onToggleMap(): void
+  onToggleNav(): void
+  onToggleRef(): void
   onClose(): void
 }
 
@@ -60,6 +62,18 @@ export function renderCard(
         disabled: part.map === null,
         onclick: handlers.onToggleMap,
       }, ['🗺']),
+      el('button', {
+        class: 'card__tool',
+        title: 'Navegar',
+        'aria-label': 'Navegar',
+        onclick: handlers.onToggleNav,
+      }, ['☰']),
+      el('button', {
+        class: 'card__tool',
+        title: 'Referência',
+        'aria-label': 'Referência',
+        onclick: handlers.onToggleRef,
+      }, ['?']),
       el('button', {
         class: 'card__tool',
         title: 'Fechar',

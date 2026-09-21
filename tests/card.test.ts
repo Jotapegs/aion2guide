@@ -25,6 +25,8 @@ const handlers: CardHandlers = {
   onComplete: () => draw(completeCurrent(guide, progress)),
   onToggleAction: (id) => draw(toggleAction(guide, progress, id)),
   onToggleMap: () => {},
+  onToggleNav: () => {},
+  onToggleRef: () => {},
   onClose: () => {},
 }
 

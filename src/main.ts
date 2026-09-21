@@ -1,16 +1,18 @@
 import './styles/base.css'
 import './styles/card.css'
 import './styles/map.css'
+import './styles/panels.css'
 import rawGuide from '../data/guide.json'
 import { parseGuide } from './core/guide'
 import {
   type Progress,
-  normalizeProgress, nextPart, previousPart, toggleAction, completeCurrent, currentFlatPart,
+  normalizeProgress, nextPart, previousPart, toggleAction, completeCurrent, currentFlatPart, goToPart,
 } from './core/progress'
 import { createStore } from './core/storage'
 import { getBridge } from './core/bridge'
 import { renderCard, type CardHandlers } from './ui/card'
 import { toggleMap, closeMap, isMapOpen } from './ui/mapModal'
+import { toggleNavPanel, toggleRefPanel, closePanel, isPanelOpen } from './ui/panels'
 
 const guide = parseGuide(rawGuide)
 const store = createStore()
@@ -38,6 +40,8 @@ const handlers: CardHandlers = {
     const { part, phase } = currentFlatPart(guide, progress)
     toggleMap(part.map, `${phase.title} · ${part.title}`)
   },
+  onToggleNav: () => toggleNavPanel(guide, progress, (id) => update(goToPart(guide, progress, id))),
+  onToggleRef: () => toggleRefPanel(guide),
   onClose: () => getBridge()?.close(),
 }
 
@@ -59,7 +63,10 @@ async function start(): Promise<void> {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && isMapOpen()) closeMap()
+  if (e.key !== 'Escape') return
+  // O mapa fica por cima dos painéis, então fecha primeiro.
+  if (isMapOpen()) closeMap()
+  else if (isPanelOpen()) closePanel()
 })
 
 void start()
