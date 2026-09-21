@@ -35,9 +35,14 @@ function applySettings(next: Settings): void {
 /** Aplica uma transição, redesenha e persiste. */
 function update(next: Progress): void {
   // Antes de `progress = next`: depois, a comparação seria do valor com
-  // ele mesmo e o mapa nunca fecharia, continuando a mostrar a zona
-  // anterior enquanto o texto já fala de outra.
-  if (next.currentPartId !== progress.currentPartId) closeMap()
+  // ele mesmo e nada fecharia.
+  if (next.currentPartId !== progress.currentPartId) {
+    // O mapa mostraria a zona anterior enquanto o texto já fala de outra.
+    closeMap()
+    // O painel de navegação destacaria a part errada como atual. Isso
+    // acontece de verdade: uma hotkey global avança com o painel aberto.
+    closePanel()
+  }
   progress = next
   render()
   void store.saveProgress(progress)

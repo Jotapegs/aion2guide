@@ -50,6 +50,17 @@ function handleHotkey(action: HotkeyAction): void {
   win.webContents.send('aion:hotkey', action)
 }
 
+/** Sem isto, uma falha ao abrir vira rejeição não tratada e o app fica
+ *  sem janela e sem explicação. */
+async function abrirJanela(): Promise<void> {
+  try {
+    await createWindow()
+  } catch (erro) {
+    console.error('nao consegui abrir a janela:', erro)
+    app.quit()
+  }
+}
+
 async function createWindow(): Promise<void> {
   win = createOverlayWindow(sanitizeBounds(await store.read('window')))
   watchBounds(win)
@@ -79,9 +90,9 @@ if (!app.requestSingleInstanceLock()) {
     if (naoRegistradas.length > 0) {
       console.warn(`hotkeys ja tomadas por outro programa: ${naoRegistradas.join(', ')}`)
     }
-    void createWindow()
+    void abrirJanela()
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) void createWindow()
+      if (BrowserWindow.getAllWindows().length === 0) void abrirJanela()
     })
   })
 

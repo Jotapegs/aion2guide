@@ -54,6 +54,38 @@ describe('createFileStore', () => {
     expect(await store.read('progress')).toEqual({ v: 2 })
   })
 
+  it('gravações concorrentes na mesma chave não se corrompem', async () => {
+    // O renderer chama saveProgress sem esperar a anterior, então navegar
+    // rápido dispara várias gravações da mesma chave ao mesmo tempo. Com
+    // um temporário de nome fixo, uma renomeia o arquivo que a outra ainda
+    // estava escrevendo, e sobra JSON truncado ou um rename em cima do
+    // nada.
+    const d = await dir()
+    const store = createFileStore(d)
+    const grande = (n: number): unknown => ({ v: String(n).repeat(20000), n })
+
+    await Promise.all([1, 2, 3, 4, 5, 6, 7, 8].map((n) => store.write('progress', grande(n))))
+
+    expect((await readdir(d)).filter((f) => f.endsWith('.tmp'))).toEqual([])
+    const lido = await store.read('progress')
+    // Seja qual for a que venceu, precisa ser um objeto completo.
+    expect(lido).not.toBeNull()
+    expect(lido).toHaveProperty('n')
+    const { n } = lido as { n: number; v: string }
+    expect(lido).toEqual(grande(n))
+  })
+
+  it('a última gravação é a que fica', async () => {
+    const d = await dir()
+    const store = createFileStore(d)
+    await Promise.all([
+      store.write('progress', { ordem: 1 }),
+      store.write('progress', { ordem: 2 }),
+      store.write('progress', { ordem: 3 }),
+    ])
+    expect(await store.read('progress')).toEqual({ ordem: 3 })
+  })
+
   it('a gravação é atômica: o alvo nunca fica pela metade', async () => {
     // Se o rename falhasse a meio caminho, o arquivo antigo continuaria
     // íntegro. Aqui basta provar que nenhum .tmp sobrevive e que o
