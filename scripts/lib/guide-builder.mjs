@@ -191,10 +191,15 @@ export function buildGuide(blocks, options) {
       continue
     }
 
-    // Tudo antes da primeira fase alimenta a lista de downtime.
+    // Tudo antes da primeira fase alimenta a lista de downtime, mas só item
+    // de lista conta como item de fato: o título do documento (Heading1) e
+    // rótulos soltos como 'Visual Map Legend' são parágrafos comuns sem
+    // numId, não itens da lista de downtime.
     if (!phase) {
-      for (const line of block.lines) {
-        if (!isHeaderLine(line)) downtime.push(line)
+      if (block.numId !== null) {
+        for (const line of block.lines) {
+          if (!isHeaderLine(line)) downtime.push(line)
+        }
       }
       continue
     }
