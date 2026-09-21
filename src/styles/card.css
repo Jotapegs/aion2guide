@@ -3,6 +3,8 @@
   flex-direction: column;
   height: 100vh;
   background: var(--glass);
+  /* Não faz efeito sobre a área de trabalho numa janela transparente, mas
+     vale quando o app roda numa aba de navegador na segunda tela. */
   backdrop-filter: blur(20px) saturate(1.25);
   border: 1px solid var(--stroke);
   border-radius: var(--radius);
