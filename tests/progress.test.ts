@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  type Progress,
   initialProgress, normalizeProgress, goToPart, nextPart, previousPart,
   toggleAction, completeCurrent, resetProgress, progressStats, currentFlatPart,
 } from '../src/core/progress'
@@ -143,6 +144,21 @@ describe('normalizeProgress', () => {
     expect(p.checkedActions).toEqual(['p1-1-a1'])
   })
 
+  it('descarta ids repetidos', () => {
+    // Um arquivo corrompido ou editado à mão pode trazer o mesmo id duas
+    // vezes. Passando, progressStats contaria a part duplicada.
+    const saved = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'p1-1', 'p2-1'],
+      checkedActions: ['p1-1-a1', 'p1-1-a1'],
+    }
+    const p = normalizeProgress(guide, saved)
+    expect(p.completedParts).toEqual(['p1-1', 'p2-1'])
+    expect(p.checkedActions).toEqual(['p1-1-a1'])
+    expect(progressStats(guide, p).completed).toBe(2)
+  })
+
   it('schemaVersion diferente recomeça do zero', () => {
     const saved = { schemaVersion: 99, currentPartId: 'p2-1', completedParts: ['p1-1'], checkedActions: [] }
     expect(normalizeProgress(guide, saved)).toEqual(initialProgress(guide))
@@ -170,8 +186,16 @@ describe('progressStats', () => {
   })
 
   it('ignora parts concluídas que não existem mais', () => {
-    const saved = { schemaVersion: 1, currentPartId: 'p1-1', completedParts: ['p1-1', 'fantasma'], checkedActions: [] }
-    const p = normalizeProgress(guide, saved)
+    // Monta o Progress à mão, sem passar por normalizeProgress: é o filtro
+    // do próprio progressStats que está sob teste aqui. Normalizando antes,
+    // o id fantasma já teria sumido e o teste passaria mesmo com o filtro
+    // apagado.
+    const p: Progress = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'fantasma'],
+      checkedActions: [],
+    }
     expect(progressStats(guide, p).completed).toBe(1)
   })
 })

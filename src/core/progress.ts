@@ -1,4 +1,4 @@
-import { type Guide, type FlatPart, flattenParts, findPart } from './guide'
+import { type Guide, type FlatPart, type Action, flattenParts, findPart } from './guide'
 
 export type Progress = {
   schemaVersion: 1
@@ -12,13 +12,13 @@ const SCHEMA_VERSION = 1
 /** Todos os ids de ação do guia, incluindo sub-ações. */
 function allActionIds(guide: Guide): Set<string> {
   const ids = new Set<string>()
-  const walk = (actions: { id: string; sub: { id: string; sub: unknown[] }[] }[]): void => {
+  const walk = (actions: Action[]): void => {
     for (const a of actions) {
       ids.add(a.id)
-      walk(a.sub as never)
+      walk(a.sub)
     }
   }
-  for (const { part } of flattenParts(guide)) walk(part.actions as never)
+  for (const { part } of flattenParts(guide)) walk(part.actions)
   return ids
 }
 
@@ -50,12 +50,15 @@ export function normalizeProgress(guide: Guide, raw: unknown): Progress {
   const partIds = new Set(flat.map((f) => f.part.id))
   const actionIds = allActionIds(guide)
 
-  const completedParts = r.completedParts.filter(
-    (id): id is string => typeof id === 'string' && partIds.has(id),
-  )
-  const checkedActions = r.checkedActions.filter(
-    (id): id is string => typeof id === 'string' && actionIds.has(id),
-  )
+  // O Set não é decoração: um id repetido num arquivo corrompido ou editado
+  // à mão sobreviveria ao filtro e faria progressStats contar a mesma part
+  // duas vezes, chegando a anunciar mais parts concluídas do que existem.
+  const completedParts = [
+    ...new Set(r.completedParts.filter((id): id is string => typeof id === 'string' && partIds.has(id))),
+  ]
+  const checkedActions = [
+    ...new Set(r.checkedActions.filter((id): id is string => typeof id === 'string' && actionIds.has(id))),
+  ]
 
   let currentPartId = r.currentPartId
   if (!partIds.has(currentPartId)) {
