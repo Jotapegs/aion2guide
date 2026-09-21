@@ -3086,7 +3086,7 @@ export function renderCard(
     el('span', { class: 'card__phase' }, [phase.title]),
     el('span', { class: 'card__levels' }, [`${phase.levelFrom}–${phase.levelTo}`]),
     el('div', { class: 'card__tools' }, [
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
   ])
 
@@ -3101,6 +3101,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Part anterior',
+        'aria-label': 'Part anterior',
         disabled: index === 0,
         onclick: handlers.onPrev,
       }, ['◀']),
@@ -3111,6 +3112,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Próxima part',
+        'aria-label': 'Próxima part',
         disabled: index === total - 1,
         onclick: handlers.onNext,
       }, ['▶']),
@@ -3497,10 +3499,11 @@ E, dentro de `renderCard`, substitua o conteúdo de `card__tools` por:
       el('button', {
         class: 'card__tool',
         title: part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        'aria-label': part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
         disabled: part.map === null,
         onclick: handlers.onToggleMap,
       }, ['🗺']),
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
 ```
 
@@ -3716,7 +3719,7 @@ function mount(kind: PanelKind, title: string, content: HTMLElement[]): void {
   panel = el('div', { class: 'panel' }, [
     el('header', { class: 'panel__head' }, [
       el('span', {}, [title]),
-      el('button', { class: 'panel__close', title: 'Fechar', onclick: closePanel }, ['✕']),
+      el('button', { class: 'panel__close', title: 'Fechar', 'aria-label': 'Fechar', onclick: closePanel }, ['✕']),
     ]),
     el('div', { class: 'panel__body' }, content),
   ])
@@ -3961,12 +3964,13 @@ E o bloco `card__tools` dentro de `renderCard`:
       el('button', {
         class: 'card__tool',
         title: part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        'aria-label': part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
         disabled: part.map === null,
         onclick: handlers.onToggleMap,
       }, ['🗺']),
-      el('button', { class: 'card__tool', title: 'Navegar', onclick: handlers.onToggleNav }, ['☰']),
-      el('button', { class: 'card__tool', title: 'Referência', onclick: handlers.onToggleRef }, ['?']),
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Navegar', 'aria-label': 'Navegar', onclick: handlers.onToggleNav }, ['☰']),
+      el('button', { class: 'card__tool', title: 'Referência', 'aria-label': 'Referência', onclick: handlers.onToggleRef }, ['?']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
 ```
 
@@ -4877,7 +4881,7 @@ export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandle
 Em `src/ui/card.ts`, o tipo ganha `onToggleSettings(): void`, e o bloco `card__tools` recebe mais um botão, antes do `✕`:
 
 ```ts
-      el('button', { class: 'card__tool', title: 'Ajustes', onclick: handlers.onToggleSettings }, ['⚙']),
+      el('button', { class: 'card__tool', title: 'Ajustes', 'aria-label': 'Ajustes', onclick: handlers.onToggleSettings }, ['⚙']),
 ```
 
 - [ ] **Step 9: Ligar tudo no `src/main.ts`**

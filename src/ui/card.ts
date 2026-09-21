@@ -49,7 +49,15 @@ export function renderCard(
     el('span', { class: 'card__phase' }, [phase.title]),
     el('span', { class: 'card__levels' }, [`${phase.levelFrom}–${phase.levelTo}`]),
     el('div', { class: 'card__tools' }, [
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      // Botão de ícone precisa de aria-label: o título é dica visual, e o
+      // nome acessível sai do conteúdo — um leitor de tela anunciaria o
+      // glifo ✕ em vez de "Fechar".
+      el('button', {
+        class: 'card__tool',
+        title: 'Fechar',
+        'aria-label': 'Fechar',
+        onclick: handlers.onClose,
+      }, ['✕']),
     ]),
   ])
 
@@ -64,6 +72,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Part anterior',
+        'aria-label': 'Part anterior',
         disabled: index === 0,
         onclick: handlers.onPrev,
       }, ['◀']),
@@ -74,6 +83,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Próxima part',
+        'aria-label': 'Próxima part',
         disabled: index === total - 1,
         onclick: handlers.onNext,
       }, ['▶']),

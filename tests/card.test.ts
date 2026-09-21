@@ -111,6 +111,17 @@ describe('card contra o guia real', () => {
     expect(text('.meter')).toContain(`1/${total}`)
   })
 
+  it('todo botão de ícone tem nome acessível', () => {
+    // O nome acessível sai do conteúdo do botão, então um botão que só
+    // mostra um glifo seria anunciado como "✕" sem um aria-label.
+    const semNome = all('button').filter((b) => {
+      const texto = (b.textContent ?? '').trim()
+      const soGlifo = texto.length <= 2 && !/[a-zA-Z]/.test(texto)
+      return soGlifo && !b.getAttribute('aria-label')
+    })
+    expect(semNome.map((b) => b.textContent)).toEqual([])
+  })
+
   // A regra central do app.
   it('8. percorrer o guia inteiro ida e volta não marca nada', () => {
     const total = flattenParts(guide).length
