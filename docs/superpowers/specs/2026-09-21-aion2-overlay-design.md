@@ -64,9 +64,25 @@ descrevem o que está desenhado no mapa **e** servem na interface. A de Kisks n�
 barrinha preta é invisível sobre vidro escuro. Daí o par `color` / `uiColor` no modelo —
 ver a seção Visual.
 
-**Quebras de linha:** `<w:br/>` dentro de um parágrafo separa ações distintas coladas no
-mesmo bullet, por exemplo a Fase 4 Part 1. O parser precisa tratá-las, senão duas ações
-viram uma.
+**Quebras de linha:** um `<w:br/>` dentro de um parágrafo separa conteúdos distintos
+colados no mesmo bullet, por exemplo a Fase 4 Part 1. Sem tratá-las, duas coisas viram
+uma.
+
+**O que é ação e o que é contexto.** Nem todo parágrafo do guia é algo que se faz. "You
+get your first lvl8 skills here!" e "After getting the Wings from Urugugu" são avisos;
+dar checkbox neles seria pedir que se marque o que não se executa. A separação segue a
+forma que o próprio documento usa, sem lista de exceções:
+
+- Um item de lista é sempre uma ação. Linhas seguintes dentro dele viram sub-ações.
+- Um item com `ilvl` ≥ 1 é sub-ação do item de nível 0 anterior.
+- Num parágrafo solto, uma linha no formato `Rótulo curto: conteúdo` é uma ação — é
+  exatamente a forma de "Zone Entry: ...", "Gear Check: ...", "MSQ (Powder of Death): ...".
+- Uma linha solta que termina em `:` é cabeçalho de seção e é descartada.
+- Qualquer outra linha solta vira sub-ação da ação anterior da mesma part, ou, se não
+  houver nenhuma, o `note` da part.
+
+É essa regra que promove as cinco notas de kisk da Fase 5 a ações de verdade, sem
+precisar tratá-las como caso especial.
 
 **Mapas:** todas as 8 imagens têm letterbox preto — no mínimo uma moldura de 16 px, e
 em alguns casos barras grandes. Medido com limiar de luminância 24:
@@ -125,6 +141,7 @@ type Phase = {
 type Part = {
   id: string            // 'p4-1'
   title: string
+  note: string | null   // contexto que não se marca
   map: MapRef | null
   actions: Action[]
 }
