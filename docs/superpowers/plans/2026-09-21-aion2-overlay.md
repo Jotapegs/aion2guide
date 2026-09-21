@@ -1870,6 +1870,7 @@ O coração do app e o módulo mais importante de testar. Lógica pura: sem DOM,
 ```ts
 import { describe, it, expect } from 'vitest'
 import {
+  type Progress,
   initialProgress, normalizeProgress, goToPart, nextPart, previousPart,
   toggleAction, completeCurrent, resetProgress, progressStats, currentFlatPart,
 } from '../src/core/progress'
@@ -2013,6 +2014,21 @@ describe('normalizeProgress', () => {
     expect(p.checkedActions).toEqual(['p1-1-a1'])
   })
 
+  it('descarta ids repetidos', () => {
+    // Um arquivo corrompido ou editado à mão pode trazer o mesmo id duas
+    // vezes. Passando, progressStats contaria a part duplicada.
+    const saved = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'p1-1', 'p2-1'],
+      checkedActions: ['p1-1-a1', 'p1-1-a1'],
+    }
+    const p = normalizeProgress(guide, saved)
+    expect(p.completedParts).toEqual(['p1-1', 'p2-1'])
+    expect(p.checkedActions).toEqual(['p1-1-a1'])
+    expect(progressStats(guide, p).completed).toBe(2)
+  })
+
   it('schemaVersion diferente recomeça do zero', () => {
     const saved = { schemaVersion: 99, currentPartId: 'p2-1', completedParts: ['p1-1'], checkedActions: [] }
     expect(normalizeProgress(guide, saved)).toEqual(initialProgress(guide))
@@ -2040,8 +2056,16 @@ describe('progressStats', () => {
   })
 
   it('ignora parts concluídas que não existem mais', () => {
-    const saved = { schemaVersion: 1, currentPartId: 'p1-1', completedParts: ['p1-1', 'fantasma'], checkedActions: [] }
-    const p = normalizeProgress(guide, saved)
+    // Monta o Progress à mão, sem passar por normalizeProgress: é o filtro
+    // do próprio progressStats que está sob teste aqui. Normalizando antes,
+    // o id fantasma já teria sumido e o teste passaria mesmo com o filtro
+    // apagado.
+    const p: Progress = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'fantasma'],
+      checkedActions: [],
+    }
     expect(progressStats(guide, p).completed).toBe(1)
   })
 })
@@ -2064,7 +2088,7 @@ Expected: FAIL — `Failed to resolve import "../src/core/progress"`.
 - [ ] **Step 3: Escrever o `src/core/progress.ts`**
 
 ```ts
-import { type Guide, type FlatPart, flattenParts, findPart } from './guide'
+import { type Guide, type FlatPart, type Action, flattenParts, findPart } from './guide'
 
 export type Progress = {
   schemaVersion: 1
@@ -2078,13 +2102,13 @@ const SCHEMA_VERSION = 1
 /** Todos os ids de ação do guia, incluindo sub-ações. */
 function allActionIds(guide: Guide): Set<string> {
   const ids = new Set<string>()
-  const walk = (actions: { id: string; sub: { id: string; sub: unknown[] }[] }[]): void => {
+  const walk = (actions: Action[]): void => {
     for (const a of actions) {
       ids.add(a.id)
-      walk(a.sub as never)
+      walk(a.sub)
     }
   }
-  for (const { part } of flattenParts(guide)) walk(part.actions as never)
+  for (const { part } of flattenParts(guide)) walk(part.actions)
   return ids
 }
 
@@ -2116,12 +2140,15 @@ export function normalizeProgress(guide: Guide, raw: unknown): Progress {
   const partIds = new Set(flat.map((f) => f.part.id))
   const actionIds = allActionIds(guide)
 
-  const completedParts = r.completedParts.filter(
-    (id): id is string => typeof id === 'string' && partIds.has(id),
-  )
-  const checkedActions = r.checkedActions.filter(
-    (id): id is string => typeof id === 'string' && actionIds.has(id),
-  )
+  // O Set não é decoração: um id repetido num arquivo corrompido ou editado
+  // à mão sobreviveria ao filtro e faria progressStats contar a mesma part
+  // duas vezes, chegando a anunciar mais parts concluídas do que existem.
+  const completedParts = [
+    ...new Set(r.completedParts.filter((id): id is string => typeof id === 'string' && partIds.has(id))),
+  ]
+  const checkedActions = [
+    ...new Set(r.checkedActions.filter((id): id is string => typeof id === 'string' && actionIds.has(id))),
+  ]
 
   let currentPartId = r.currentPartId
   if (!partIds.has(currentPartId)) {
@@ -2200,7 +2227,7 @@ export function progressStats(
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
 Run: `npx vitest run tests/progress.test.ts`
-Expected: PASS — 24 testes.
+Expected: PASS — 26 testes.
 
 - [ ] **Step 5: Commit**
 
