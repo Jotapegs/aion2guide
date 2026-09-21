@@ -15,8 +15,12 @@
 - Node 22 (a máquina tem v22.14.0). Windows 11. Git Bash ou PowerShell.
 - **Sem framework de UI.** Nada de React, Vue, Svelte ou similar em `src/`. A renderização é DOM direto.
 - **Idioma:** identificadores e nomes de arquivo em inglês. Comentários, mensagens de erro e textos de interface em português. **O conteúdo do guia permanece em inglês**, exatamente como no documento — "Seal DG", "Safe Haven" e "Kisk" são como aparecem no jogo e traduzir atrapalharia.
-- **Mensagens de commit em português**, terminando com a linha:
+- **Mensagens de commit em português, sem acentuação**, terminando com a linha:
   `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`
+  O log fica em ASCII puro de propósito, por consistência com os commits que já
+  existem e para não depender da codificação do terminal de quem for ler. É a
+  única exceção à regra de acentuação — que continua valendo integralmente em
+  comentários, mensagens de erro e textos de interface.
 - O `.docx` fonte está na raiz do repositório: `Aion 2 Level 1-45 Speedrun Guide - appJotapegs.docx`
 - `public/maps/` está no `.gitignore`: é saída regenerável do importador. `data/guide.json` **é** versionado.
 - Os mapas nunca são reescalados. Os números das setas são pequenos e precisam continuar legíveis.
@@ -255,6 +259,18 @@ describe('parseGuide', () => {
     expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
   })
 
+  it('rejeita legenda com tag repetido, mesmo cobrindo os quatro', () => {
+    // Os quatro tags aparecem, mas 'msq' aparece duas vezes: cobrir não
+    // basta, tem que ser exatamente uma vez cada.
+    const raw = broken((g) => { g.legend.push({ ...g.legend[0] }) })
+    expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
+  })
+
+  it('rejeita map.src que começa com barra', () => {
+    const raw = broken((g) => { g.phases[1].parts[0].map.src = '/maps/image3.webp' })
+    expect(() => parseGuide(raw)).toThrow(/não deve começar com barra/)
+  })
+
   it('rejeita entrada que não é objeto', () => {
     expect(() => parseGuide(null)).toThrow(GuideError)
     expect(() => parseGuide('guia')).toThrow(GuideError)
@@ -448,7 +464,10 @@ function parseLegend(raw: unknown): LegendEntry[] {
     }
   })
   const ids = new Set(entries.map((e) => e.id))
-  if (ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
+  // Os três testes são distintos: sem o de comprimento, uma legenda com
+  // 'msq' repetido mais os outros três passaria — o conjunto teria os
+  // quatro tags, mas 'msq' não apareceria uma vez só.
+  if (entries.length !== TAGS.length || ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
     fail(`a legenda deve cobrir os quatro tags exatamente uma vez (${TAGS.join(', ')})`)
   }
   return entries
@@ -520,7 +539,7 @@ export function findPart(guide: Guide, partId: string): FlatPart | null {
 - [ ] **Step 9: Rodar os testes e confirmar que passam**
 
 Run: `npm test`
-Expected: PASS — 14 testes em `tests/guide.test.ts`.
+Expected: PASS — 16 testes em `tests/guide.test.ts`.
 
 - [ ] **Step 10: Commit**
 
