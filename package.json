@@ -14,6 +14,7 @@
     "@types/node": "^26.6.2",
     "@xmldom/xmldom": "^0.9.12",
     "jszip": "^3.10.2",
+    "sharp": "^0.35.4",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
