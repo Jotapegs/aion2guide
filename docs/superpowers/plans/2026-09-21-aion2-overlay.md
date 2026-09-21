@@ -1724,9 +1724,21 @@ describe('data/guide.json', () => {
   })
 
   it('todo mapa referenciado existe em public/', async () => {
-    for (const { part } of flattenParts(guide)) {
-      if (part.map) await access(join('public', part.map.src))
+    const referenced = flattenParts(guide)
+      .map((f) => f.part.map?.src)
+      .filter((src): src is string => src !== undefined)
+
+    const missing: string[] = []
+    for (const src of referenced) {
+      try {
+        await access(join('public', src))
+      } catch {
+        missing.push(src)
+      }
     }
+
+    expect(referenced).toHaveLength(8)
+    expect(missing).toEqual([])
   })
 
   it('as cinco notas de kisk da fase 5 viraram ações', () => {
@@ -4375,7 +4387,8 @@ O que faz isto valer como overlay: avançar sem tirar o foco do jogo. As hotkeys
 O painel de ajustes reaproveita a casca de `panels.ts` em vez de abrir um terceiro tipo de sobreposição.
 
 **Files:**
-- Create: `electron/hotkeys.ts`
+- Create: `src/core/hotkeys.ts` — as combinações e seus rótulos, sem depender do Electron
+- Create: `electron/hotkeys.ts` — o registro global, que depende
 - Modify: `electron/main.ts` — registra as hotkeys e trata `hide`
 - Modify: `src/ui/panels.ts` — o painel de ajustes
 - Modify: `src/styles/panels.css` — controles
@@ -4387,9 +4400,8 @@ O painel de ajustes reaproveita a casca de `panels.ts` em vez de abrir um tercei
 **Interfaces:**
 - Consumes: `HotkeyAction` de `src/core/bridge.ts`; `Settings`, `OPACITY_MIN`, `OPACITY_MAX` de `src/core/settings.ts`.
 - Produces:
-  - `HOTKEYS: Record<HotkeyAction, string>` e `HOTKEY_LABELS: Record<HotkeyAction, string>` em `electron/hotkeys.ts`
-  - `registerHotkeys(handle: (action: HotkeyAction) => void): HotkeyAction[]` — devolve as que não puderam ser registradas
-  - `unregisterHotkeys(): void`
+  - Em `src/core/hotkeys.ts`: `HOTKEYS: Record<HotkeyAction, string>`, `HOTKEY_LABELS: Record<HotkeyAction, string>` e `formatAccelerator(accelerator: string): string`. Este módulo é dado puro e não importa `electron`, e é por isso que ele mora em `src/core/`: tanto a casca quanto o painel de ajustes precisam das mesmas combinações, e duplicá-las deixaria a tela mentindo sobre a tecla no dia em que uma mudasse.
+  - Em `electron/hotkeys.ts`: `registerHotkeys(handle: (action: HotkeyAction) => void): HotkeyAction[]`, que devolve as que não puderam ser registradas, e `unregisterHotkeys(): void`.
   - `toggleSettingsPanel(settings: Settings, handlers: SettingsHandlers): void` em `src/ui/panels.ts`, com `SettingsHandlers = { onOpacity(v: number): void; onClickThrough(on: boolean): void; onReset(): void }`
   - `CardHandlers` ganha `onToggleSettings(): void`
 
@@ -4410,7 +4422,8 @@ vi.mock('electron', () => ({
   },
 }))
 
-const { HOTKEYS, HOTKEY_LABELS, registerHotkeys, unregisterHotkeys } = await import('../electron/hotkeys')
+const { HOTKEYS, HOTKEY_LABELS, formatAccelerator } = await import('../src/core/hotkeys')
+const { registerHotkeys, unregisterHotkeys } = await import('../electron/hotkeys')
 
 beforeEach(() => {
   register.mockReset()
@@ -4439,6 +4452,15 @@ describe('HOTKEYS', () => {
     for (const action of Object.keys(HOTKEYS)) {
       expect(HOTKEY_LABELS[action as keyof typeof HOTKEY_LABELS]).toBeTruthy()
     }
+  })
+})
+
+describe('formatAccelerator', () => {
+  it('encurta para a forma que se mostra na tela', () => {
+    expect(formatAccelerator('Control+Alt+Right')).toBe('Ctrl+Alt+→')
+    expect(formatAccelerator('Control+Alt+Left')).toBe('Ctrl+Alt+←')
+    expect(formatAccelerator('Control+Alt+Return')).toBe('Ctrl+Alt+Enter')
+    expect(formatAccelerator('Control+Alt+M')).toBe('Ctrl+Alt+M')
   })
 })
 
@@ -4471,11 +4493,14 @@ describe('registerHotkeys', () => {
 })
 ```
 
-- [ ] **Step 2: Escrever o `electron/hotkeys.ts`**
+- [ ] **Step 2: Escrever o `src/core/hotkeys.ts`**
+
+Dado puro, sem importar `electron`. Mora em `src/core/` porque a casca e o
+painel de ajustes precisam das mesmas combinações: se cada lado tivesse a sua
+cópia, mudar uma tecla deixaria a tela anunciando a antiga.
 
 ```ts
-import { globalShortcut } from 'electron'
-import type { HotkeyAction } from '../src/core/bridge'
+import type { HotkeyAction } from './bridge'
 
 /**
  * Control+Alt evita as teclas que o jogo usa. São globais: valem com o
@@ -4498,6 +4523,29 @@ export const HOTKEY_LABELS: Record<HotkeyAction, string> = {
   hide: 'Esconder o overlay',
   clickthrough: 'Cliques atravessam',
 }
+
+/** Os nomes que o Electron entende não são os que se mostra na tela. */
+const DISPLAY: Record<string, string> = {
+  Control: 'Ctrl',
+  Right: '→',
+  Left: '←',
+  Return: 'Enter',
+}
+
+export function formatAccelerator(accelerator: string): string {
+  return accelerator
+    .split('+')
+    .map((key) => DISPLAY[key] ?? key)
+    .join('+')
+}
+```
+
+- [ ] **Step 2b: Escrever o `electron/hotkeys.ts`**
+
+```ts
+import { globalShortcut } from 'electron'
+import type { HotkeyAction } from '../src/core/bridge'
+import { HOTKEYS } from '../src/core/hotkeys'
 
 /**
  * Registra tudo e devolve as ações que falharam — outro programa pode já
@@ -4641,23 +4689,14 @@ Acrescente o import e a função ao fim do arquivo:
 
 ```ts
 import { type Settings, OPACITY_MIN, OPACITY_MAX } from '../core/settings'
+import { HOTKEYS, HOTKEY_LABELS, formatAccelerator } from '../core/hotkeys'
+import type { HotkeyAction } from '../core/bridge'
 
 export type SettingsHandlers = {
   onOpacity(value: number): void
   onClickThrough(enabled: boolean): void
   onReset(): void
 }
-
-/** Os atalhos, para exibição. Repetidos aqui porque o renderer não
- *  importa de electron/ — esse módulo depende do próprio Electron. */
-const SHOWN_HOTKEYS: [string, string][] = [
-  ['Ctrl+Alt+→', 'Próxima part'],
-  ['Ctrl+Alt+←', 'Part anterior'],
-  ['Ctrl+Alt+Enter', 'Concluir a part'],
-  ['Ctrl+Alt+M', 'Abrir o mapa'],
-  ['Ctrl+Alt+H', 'Esconder o overlay'],
-  ['Ctrl+Alt+C', 'Cliques atravessam'],
-]
 
 export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandlers): void {
   toggle('settings', () => {
@@ -4689,10 +4728,10 @@ export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandle
       ]),
       el('div', { class: 'panel__group' }, [
         el('h3', { class: 'panel__group-title' }, ['Atalhos globais']),
-        ...SHOWN_HOTKEYS.map(([keys, label]) =>
+        ...(Object.entries(HOTKEYS) as [HotkeyAction, string][]).map(([action, accelerator]) =>
           el('div', { class: 'panel__hotkey' }, [
-            el('kbd', {}, [keys]),
-            el('span', {}, [label]),
+            el('kbd', {}, [formatAccelerator(accelerator)]),
+            el('span', {}, [HOTKEY_LABELS[action]]),
           ]),
         ),
       ]),
