@@ -1,0 +1,47 @@
+.map {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--glass-strong);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 6px;
+}
+
+.map__stage {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--stroke);
+  display: grid;
+  place-items: center;
+  /* aspect-ratio vem das dimensões reais da imagem, definido em JS. */
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.map__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  /* Sem suavização: os números das setas são pequenos. */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.map__caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 0 2px;
+}
+
+.map__hint {
+  margin-left: auto;
+  opacity: 0.7;
+}

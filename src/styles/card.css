@@ -1,0 +1,214 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--glass);
+  /* Não faz efeito sobre a área de trabalho numa janela transparente, mas
+     vale quando o app roda numa aba de navegador na segunda tela. */
+  backdrop-filter: blur(20px) saturate(1.25);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Faixa de arrasto. O -webkit-app-region só faz efeito no Electron. */
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--stroke);
+  -webkit-app-region: drag;
+}
+
+.card__phase {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.card__levels {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.card__tools {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.card__tool {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.card__tool:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.card__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card__title {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.card__note {
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.35;
+  padding-left: 8px;
+  border-left: 2px solid var(--stroke-strong);
+}
+
+.actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.actions--sub {
+  margin-top: 6px;
+  padding-left: 16px;
+  gap: 4px;
+}
+
+.action {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  line-height: 1.35;
+  /* Toque confortável mesmo com fonte pequena. */
+  min-height: 24px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border-left: 2px solid transparent;
+}
+
+.action:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.action--msq { border-left-color: var(--tag-msq); }
+.action--side { border-left-color: var(--tag-side); }
+.action--seal { border-left-color: var(--tag-seal); }
+.action--kisk { border-left-color: var(--tag-kisk); }
+
+.action__box {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border: 1.5px solid var(--stroke-strong);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--done);
+}
+
+.action--checked .action__box {
+  border-color: var(--done);
+}
+
+.action--checked .action__text {
+  color: var(--text-dim);
+  text-decoration: line-through;
+}
+
+.card__foot {
+  border-top: 1px solid var(--stroke);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav__arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+}
+
+.nav__arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.nav__complete {
+  flex: 1;
+  height: 28px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: rgba(111, 211, 255, 0.14);
+  border: 1px solid rgba(111, 211, 255, 0.3);
+  color: var(--accent);
+}
+
+.nav__complete:hover {
+  background: rgba(111, 211, 255, 0.22);
+}
+
+.nav__complete--done {
+  background: rgba(92, 196, 106, 0.14);
+  border-color: rgba(92, 196, 106, 0.3);
+  color: var(--done);
+}
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.meter__track {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.meter__fill {
+  height: 100%;
+  background: var(--done);
+  transition: width 160ms ease-out;
+}

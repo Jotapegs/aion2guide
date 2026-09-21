@@ -1,0 +1,32 @@
+{
+  "name": "aion2guide",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Overlay de guia de leveling 1-45 para Aion 2",
+  "author": "Jotapegs",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "extract": "node scripts/extract-docx.mjs",
+    "electron:dev": "vite",
+    "electron:build": "npm run build",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@xmldom/xmldom": "^0.9.12",
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
+    "jsdom": "^29.1.1",
+    "jszip": "^3.10.2",
+    "sharp": "^0.35.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vite-plugin-electron": "^1.1.2",
+    "vitest": "^5.0.1"
+  }
+}

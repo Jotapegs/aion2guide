@@ -15,8 +15,12 @@
 - Node 22 (a máquina tem v22.14.0). Windows 11. Git Bash ou PowerShell.
 - **Sem framework de UI.** Nada de React, Vue, Svelte ou similar em `src/`. A renderização é DOM direto.
 - **Idioma:** identificadores e nomes de arquivo em inglês. Comentários, mensagens de erro e textos de interface em português. **O conteúdo do guia permanece em inglês**, exatamente como no documento — "Seal DG", "Safe Haven" e "Kisk" são como aparecem no jogo e traduzir atrapalharia.
-- **Mensagens de commit em português**, terminando com a linha:
+- **Mensagens de commit em português, sem acentuação**, terminando com a linha:
   `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`
+  O log fica em ASCII puro de propósito, por consistência com os commits que já
+  existem e para não depender da codificação do terminal de quem for ler. É a
+  única exceção à regra de acentuação — que continua valendo integralmente em
+  comentários, mensagens de erro e textos de interface.
 - O `.docx` fonte está na raiz do repositório: `Aion 2 Level 1-45 Speedrun Guide - appJotapegs.docx`
 - `public/maps/` está no `.gitignore`: é saída regenerável do importador. `data/guide.json` **é** versionado.
 - Os mapas nunca são reescalados. Os números das setas são pequenos e precisam continuar legíveis.
@@ -255,6 +259,18 @@ describe('parseGuide', () => {
     expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
   })
 
+  it('rejeita legenda com tag repetido, mesmo cobrindo os quatro', () => {
+    // Os quatro tags aparecem, mas 'msq' aparece duas vezes: cobrir não
+    // basta, tem que ser exatamente uma vez cada.
+    const raw = broken((g) => { g.legend.push({ ...g.legend[0] }) })
+    expect(() => parseGuide(raw)).toThrow(/legenda deve cobrir os quatro tags/)
+  })
+
+  it('rejeita map.src que começa com barra', () => {
+    const raw = broken((g) => { g.phases[1].parts[0].map.src = '/maps/image3.webp' })
+    expect(() => parseGuide(raw)).toThrow(/não deve começar com barra/)
+  })
+
   it('rejeita entrada que não é objeto', () => {
     expect(() => parseGuide(null)).toThrow(GuideError)
     expect(() => parseGuide('guia')).toThrow(GuideError)
@@ -448,7 +464,10 @@ function parseLegend(raw: unknown): LegendEntry[] {
     }
   })
   const ids = new Set(entries.map((e) => e.id))
-  if (ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
+  // Os três testes são distintos: sem o de comprimento, uma legenda com
+  // 'msq' repetido mais os outros três passaria — o conjunto teria os
+  // quatro tags, mas 'msq' não apareceria uma vez só.
+  if (entries.length !== TAGS.length || ids.size !== TAGS.length || !TAGS.every((t) => ids.has(t))) {
     fail(`a legenda deve cobrir os quatro tags exatamente uma vez (${TAGS.join(', ')})`)
   }
   return entries
@@ -520,7 +539,7 @@ export function findPart(guide: Guide, partId: string): FlatPart | null {
 - [ ] **Step 9: Rodar os testes e confirmar que passam**
 
 Run: `npm test`
-Expected: PASS — 14 testes em `tests/guide.test.ts`.
+Expected: PASS — 16 testes em `tests/guide.test.ts`.
 
 - [ ] **Step 10: Commit**
 
@@ -849,9 +868,13 @@ import('./scripts/lib/docx.mjs').then(async (m) => {
 })
 "
 ```
-Expected: `blocos: 62`, `com imagem: 8`, `tabelas: 1`, `headings: 17`.
+Expected: `blocos: 61`, `com imagem: 8`, `tabelas: 1`, `headings: 17`.
 
 Se algum número divergir, o parser está errado — não siga em frente.
+
+Sobre o 61: o `<w:body>` tem 62 filhos diretos, mas o último é um `<w:sectPr>`,
+que descreve a página (margens, tamanho) e não é conteúdo. `parseDocument`
+considera bloco apenas `w:p` e `w:tbl`, então 60 parágrafos mais 1 tabela dão 61.
 
 - [ ] **Step 7: Commit**
 
@@ -1096,6 +1119,16 @@ describe('buildGuide', () => {
     expect(guide.downtime).toEqual(['Weapons (+5 max).'])
   })
 
+  it('não deixa título nem rótulo solto vazarem para o downtime', () => {
+    // O documento real começa com um Heading1 e tem um "Visual Map Legend"
+    // solto antes da tabela. Nenhum dos dois é item de downtime.
+    const blocks = baseBlocks([li(['MSQ'])])
+    blocks.unshift(heading('Heading1', 'Aion 2 Level 1–45 Ultimate Speedrun Guide'))
+    blocks.splice(4, 0, p(['Visual Map Legend']))
+    const guide = buildGuide(blocks, OPTS)
+    expect(guide.downtime).toEqual(['Weapons (+5 max).'])
+  })
+
   it('infere o tag pelo texto da ação', () => {
     const guide = buildGuide(
       baseBlocks([
@@ -1319,10 +1352,16 @@ export function buildGuide(blocks, options) {
       continue
     }
 
-    // Tudo antes da primeira fase alimenta a lista de downtime.
+    // Antes da primeira fase, só os itens de lista alimentam o downtime.
+    // O título do documento e o rótulo solto "Visual Map Legend" também
+    // vivem aqui e não têm numId — sem essa checagem, vazariam para dentro
+    // da lista. O sinal é o mesmo que separa item de parágrafo no resto
+    // do módulo, não uma lista de exceções por texto.
     if (!phase) {
-      for (const line of block.lines) {
-        if (!isHeaderLine(line)) downtime.push(line)
+      if (block.numId !== null) {
+        for (const line of block.lines) {
+          if (!isHeaderLine(line)) downtime.push(line)
+        }
       }
       continue
     }
@@ -1351,7 +1390,7 @@ export function buildGuide(blocks, options) {
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
 Run: `npx vitest run tests/guide-builder.test.mjs`
-Expected: PASS — 18 testes.
+Expected: PASS — 19 testes.
 
 - [ ] **Step 5: Rodar a suíte inteira**
 
@@ -1724,9 +1763,21 @@ describe('data/guide.json', () => {
   })
 
   it('todo mapa referenciado existe em public/', async () => {
-    for (const { part } of flattenParts(guide)) {
-      if (part.map) await access(join('public', part.map.src))
+    const referenced = flattenParts(guide)
+      .map((f) => f.part.map?.src)
+      .filter((src): src is string => src !== undefined)
+
+    const missing: string[] = []
+    for (const src of referenced) {
+      try {
+        await access(join('public', src))
+      } catch {
+        missing.push(src)
+      }
     }
+
+    expect(referenced).toHaveLength(8)
+    expect(missing).toEqual([])
   })
 
   it('as cinco notas de kisk da fase 5 viraram ações', () => {
@@ -1819,6 +1870,7 @@ O coração do app e o módulo mais importante de testar. Lógica pura: sem DOM,
 ```ts
 import { describe, it, expect } from 'vitest'
 import {
+  type Progress,
   initialProgress, normalizeProgress, goToPart, nextPart, previousPart,
   toggleAction, completeCurrent, resetProgress, progressStats, currentFlatPart,
 } from '../src/core/progress'
@@ -1962,6 +2014,21 @@ describe('normalizeProgress', () => {
     expect(p.checkedActions).toEqual(['p1-1-a1'])
   })
 
+  it('descarta ids repetidos', () => {
+    // Um arquivo corrompido ou editado à mão pode trazer o mesmo id duas
+    // vezes. Passando, progressStats contaria a part duplicada.
+    const saved = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'p1-1', 'p2-1'],
+      checkedActions: ['p1-1-a1', 'p1-1-a1'],
+    }
+    const p = normalizeProgress(guide, saved)
+    expect(p.completedParts).toEqual(['p1-1', 'p2-1'])
+    expect(p.checkedActions).toEqual(['p1-1-a1'])
+    expect(progressStats(guide, p).completed).toBe(2)
+  })
+
   it('schemaVersion diferente recomeça do zero', () => {
     const saved = { schemaVersion: 99, currentPartId: 'p2-1', completedParts: ['p1-1'], checkedActions: [] }
     expect(normalizeProgress(guide, saved)).toEqual(initialProgress(guide))
@@ -1989,8 +2056,16 @@ describe('progressStats', () => {
   })
 
   it('ignora parts concluídas que não existem mais', () => {
-    const saved = { schemaVersion: 1, currentPartId: 'p1-1', completedParts: ['p1-1', 'fantasma'], checkedActions: [] }
-    const p = normalizeProgress(guide, saved)
+    // Monta o Progress à mão, sem passar por normalizeProgress: é o filtro
+    // do próprio progressStats que está sob teste aqui. Normalizando antes,
+    // o id fantasma já teria sumido e o teste passaria mesmo com o filtro
+    // apagado.
+    const p: Progress = {
+      schemaVersion: 1,
+      currentPartId: 'p1-1',
+      completedParts: ['p1-1', 'fantasma'],
+      checkedActions: [],
+    }
     expect(progressStats(guide, p).completed).toBe(1)
   })
 })
@@ -2013,7 +2088,7 @@ Expected: FAIL — `Failed to resolve import "../src/core/progress"`.
 - [ ] **Step 3: Escrever o `src/core/progress.ts`**
 
 ```ts
-import { type Guide, type FlatPart, flattenParts, findPart } from './guide'
+import { type Guide, type FlatPart, type Action, flattenParts, findPart } from './guide'
 
 export type Progress = {
   schemaVersion: 1
@@ -2027,13 +2102,13 @@ const SCHEMA_VERSION = 1
 /** Todos os ids de ação do guia, incluindo sub-ações. */
 function allActionIds(guide: Guide): Set<string> {
   const ids = new Set<string>()
-  const walk = (actions: { id: string; sub: { id: string; sub: unknown[] }[] }[]): void => {
+  const walk = (actions: Action[]): void => {
     for (const a of actions) {
       ids.add(a.id)
-      walk(a.sub as never)
+      walk(a.sub)
     }
   }
-  for (const { part } of flattenParts(guide)) walk(part.actions as never)
+  for (const { part } of flattenParts(guide)) walk(part.actions)
   return ids
 }
 
@@ -2065,12 +2140,15 @@ export function normalizeProgress(guide: Guide, raw: unknown): Progress {
   const partIds = new Set(flat.map((f) => f.part.id))
   const actionIds = allActionIds(guide)
 
-  const completedParts = r.completedParts.filter(
-    (id): id is string => typeof id === 'string' && partIds.has(id),
-  )
-  const checkedActions = r.checkedActions.filter(
-    (id): id is string => typeof id === 'string' && actionIds.has(id),
-  )
+  // O Set não é decoração: um id repetido num arquivo corrompido ou editado
+  // à mão sobreviveria ao filtro e faria progressStats contar a mesma part
+  // duas vezes, chegando a anunciar mais parts concluídas do que existem.
+  const completedParts = [
+    ...new Set(r.completedParts.filter((id): id is string => typeof id === 'string' && partIds.has(id))),
+  ]
+  const checkedActions = [
+    ...new Set(r.checkedActions.filter((id): id is string => typeof id === 'string' && actionIds.has(id))),
+  ]
 
   let currentPartId = r.currentPartId
   if (!partIds.has(currentPartId)) {
@@ -2149,7 +2227,7 @@ export function progressStats(
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
 Run: `npx vitest run tests/progress.test.ts`
-Expected: PASS — 24 testes.
+Expected: PASS — 26 testes.
 
 - [ ] **Step 5: Commit**
 
@@ -3008,7 +3086,7 @@ export function renderCard(
     el('span', { class: 'card__phase' }, [phase.title]),
     el('span', { class: 'card__levels' }, [`${phase.levelFrom}–${phase.levelTo}`]),
     el('div', { class: 'card__tools' }, [
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
   ])
 
@@ -3023,6 +3101,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Part anterior',
+        'aria-label': 'Part anterior',
         disabled: index === 0,
         onclick: handlers.onPrev,
       }, ['◀']),
@@ -3033,6 +3112,7 @@ export function renderCard(
       el('button', {
         class: 'nav__arrow',
         title: 'Próxima part',
+        'aria-label': 'Próxima part',
         disabled: index === total - 1,
         onclick: handlers.onNext,
       }, ['▶']),
@@ -3419,10 +3499,11 @@ E, dentro de `renderCard`, substitua o conteúdo de `card__tools` por:
       el('button', {
         class: 'card__tool',
         title: part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        'aria-label': part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
         disabled: part.map === null,
         onclick: handlers.onToggleMap,
       }, ['🗺']),
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
 ```
 
@@ -3638,7 +3719,7 @@ function mount(kind: PanelKind, title: string, content: HTMLElement[]): void {
   panel = el('div', { class: 'panel' }, [
     el('header', { class: 'panel__head' }, [
       el('span', {}, [title]),
-      el('button', { class: 'panel__close', title: 'Fechar', onclick: closePanel }, ['✕']),
+      el('button', { class: 'panel__close', title: 'Fechar', 'aria-label': 'Fechar', onclick: closePanel }, ['✕']),
     ]),
     el('div', { class: 'panel__body' }, content),
   ])
@@ -3883,12 +3964,13 @@ E o bloco `card__tools` dentro de `renderCard`:
       el('button', {
         class: 'card__tool',
         title: part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        'aria-label': part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
         disabled: part.map === null,
         onclick: handlers.onToggleMap,
       }, ['🗺']),
-      el('button', { class: 'card__tool', title: 'Navegar', onclick: handlers.onToggleNav }, ['☰']),
-      el('button', { class: 'card__tool', title: 'Referência', onclick: handlers.onToggleRef }, ['?']),
-      el('button', { class: 'card__tool', title: 'Fechar', onclick: handlers.onClose }, ['✕']),
+      el('button', { class: 'card__tool', title: 'Navegar', 'aria-label': 'Navegar', onclick: handlers.onToggleNav }, ['☰']),
+      el('button', { class: 'card__tool', title: 'Referência', 'aria-label': 'Referência', onclick: handlers.onToggleRef }, ['?']),
+      el('button', { class: 'card__tool', title: 'Fechar', 'aria-label': 'Fechar', onclick: handlers.onClose }, ['✕']),
     ]),
 ```
 
@@ -4375,7 +4457,8 @@ O que faz isto valer como overlay: avançar sem tirar o foco do jogo. As hotkeys
 O painel de ajustes reaproveita a casca de `panels.ts` em vez de abrir um terceiro tipo de sobreposição.
 
 **Files:**
-- Create: `electron/hotkeys.ts`
+- Create: `src/core/hotkeys.ts` — as combinações e seus rótulos, sem depender do Electron
+- Create: `electron/hotkeys.ts` — o registro global, que depende
 - Modify: `electron/main.ts` — registra as hotkeys e trata `hide`
 - Modify: `src/ui/panels.ts` — o painel de ajustes
 - Modify: `src/styles/panels.css` — controles
@@ -4387,9 +4470,8 @@ O painel de ajustes reaproveita a casca de `panels.ts` em vez de abrir um tercei
 **Interfaces:**
 - Consumes: `HotkeyAction` de `src/core/bridge.ts`; `Settings`, `OPACITY_MIN`, `OPACITY_MAX` de `src/core/settings.ts`.
 - Produces:
-  - `HOTKEYS: Record<HotkeyAction, string>` e `HOTKEY_LABELS: Record<HotkeyAction, string>` em `electron/hotkeys.ts`
-  - `registerHotkeys(handle: (action: HotkeyAction) => void): HotkeyAction[]` — devolve as que não puderam ser registradas
-  - `unregisterHotkeys(): void`
+  - Em `src/core/hotkeys.ts`: `HOTKEYS: Record<HotkeyAction, string>`, `HOTKEY_LABELS: Record<HotkeyAction, string>` e `formatAccelerator(accelerator: string): string`. Este módulo é dado puro e não importa `electron`, e é por isso que ele mora em `src/core/`: tanto a casca quanto o painel de ajustes precisam das mesmas combinações, e duplicá-las deixaria a tela mentindo sobre a tecla no dia em que uma mudasse.
+  - Em `electron/hotkeys.ts`: `registerHotkeys(handle: (action: HotkeyAction) => void): HotkeyAction[]`, que devolve as que não puderam ser registradas, e `unregisterHotkeys(): void`.
   - `toggleSettingsPanel(settings: Settings, handlers: SettingsHandlers): void` em `src/ui/panels.ts`, com `SettingsHandlers = { onOpacity(v: number): void; onClickThrough(on: boolean): void; onReset(): void }`
   - `CardHandlers` ganha `onToggleSettings(): void`
 
@@ -4410,7 +4492,8 @@ vi.mock('electron', () => ({
   },
 }))
 
-const { HOTKEYS, HOTKEY_LABELS, registerHotkeys, unregisterHotkeys } = await import('../electron/hotkeys')
+const { HOTKEYS, HOTKEY_LABELS, formatAccelerator } = await import('../src/core/hotkeys')
+const { registerHotkeys, unregisterHotkeys } = await import('../electron/hotkeys')
 
 beforeEach(() => {
   register.mockReset()
@@ -4439,6 +4522,15 @@ describe('HOTKEYS', () => {
     for (const action of Object.keys(HOTKEYS)) {
       expect(HOTKEY_LABELS[action as keyof typeof HOTKEY_LABELS]).toBeTruthy()
     }
+  })
+})
+
+describe('formatAccelerator', () => {
+  it('encurta para a forma que se mostra na tela', () => {
+    expect(formatAccelerator('Control+Alt+Right')).toBe('Ctrl+Alt+→')
+    expect(formatAccelerator('Control+Alt+Left')).toBe('Ctrl+Alt+←')
+    expect(formatAccelerator('Control+Alt+Return')).toBe('Ctrl+Alt+Enter')
+    expect(formatAccelerator('Control+Alt+M')).toBe('Ctrl+Alt+M')
   })
 })
 
@@ -4471,11 +4563,14 @@ describe('registerHotkeys', () => {
 })
 ```
 
-- [ ] **Step 2: Escrever o `electron/hotkeys.ts`**
+- [ ] **Step 2: Escrever o `src/core/hotkeys.ts`**
+
+Dado puro, sem importar `electron`. Mora em `src/core/` porque a casca e o
+painel de ajustes precisam das mesmas combinações: se cada lado tivesse a sua
+cópia, mudar uma tecla deixaria a tela anunciando a antiga.
 
 ```ts
-import { globalShortcut } from 'electron'
-import type { HotkeyAction } from '../src/core/bridge'
+import type { HotkeyAction } from './bridge'
 
 /**
  * Control+Alt evita as teclas que o jogo usa. São globais: valem com o
@@ -4498,6 +4593,29 @@ export const HOTKEY_LABELS: Record<HotkeyAction, string> = {
   hide: 'Esconder o overlay',
   clickthrough: 'Cliques atravessam',
 }
+
+/** Os nomes que o Electron entende não são os que se mostra na tela. */
+const DISPLAY: Record<string, string> = {
+  Control: 'Ctrl',
+  Right: '→',
+  Left: '←',
+  Return: 'Enter',
+}
+
+export function formatAccelerator(accelerator: string): string {
+  return accelerator
+    .split('+')
+    .map((key) => DISPLAY[key] ?? key)
+    .join('+')
+}
+```
+
+- [ ] **Step 2b: Escrever o `electron/hotkeys.ts`**
+
+```ts
+import { globalShortcut } from 'electron'
+import type { HotkeyAction } from '../src/core/bridge'
+import { HOTKEYS } from '../src/core/hotkeys'
 
 /**
  * Registra tudo e devolve as ações que falharam — outro programa pode já
@@ -4641,23 +4759,14 @@ Acrescente o import e a função ao fim do arquivo:
 
 ```ts
 import { type Settings, OPACITY_MIN, OPACITY_MAX } from '../core/settings'
+import { HOTKEYS, HOTKEY_LABELS, formatAccelerator } from '../core/hotkeys'
+import type { HotkeyAction } from '../core/bridge'
 
 export type SettingsHandlers = {
   onOpacity(value: number): void
   onClickThrough(enabled: boolean): void
   onReset(): void
 }
-
-/** Os atalhos, para exibição. Repetidos aqui porque o renderer não
- *  importa de electron/ — esse módulo depende do próprio Electron. */
-const SHOWN_HOTKEYS: [string, string][] = [
-  ['Ctrl+Alt+→', 'Próxima part'],
-  ['Ctrl+Alt+←', 'Part anterior'],
-  ['Ctrl+Alt+Enter', 'Concluir a part'],
-  ['Ctrl+Alt+M', 'Abrir o mapa'],
-  ['Ctrl+Alt+H', 'Esconder o overlay'],
-  ['Ctrl+Alt+C', 'Cliques atravessam'],
-]
 
 export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandlers): void {
   toggle('settings', () => {
@@ -4689,10 +4798,10 @@ export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandle
       ]),
       el('div', { class: 'panel__group' }, [
         el('h3', { class: 'panel__group-title' }, ['Atalhos globais']),
-        ...SHOWN_HOTKEYS.map(([keys, label]) =>
+        ...(Object.entries(HOTKEYS) as [HotkeyAction, string][]).map(([action, accelerator]) =>
           el('div', { class: 'panel__hotkey' }, [
-            el('kbd', {}, [keys]),
-            el('span', {}, [label]),
+            el('kbd', {}, [formatAccelerator(accelerator)]),
+            el('span', {}, [HOTKEY_LABELS[action]]),
           ]),
         ),
       ]),
@@ -4772,7 +4881,7 @@ export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandle
 Em `src/ui/card.ts`, o tipo ganha `onToggleSettings(): void`, e o bloco `card__tools` recebe mais um botão, antes do `✕`:
 
 ```ts
-      el('button', { class: 'card__tool', title: 'Ajustes', onclick: handlers.onToggleSettings }, ['⚙']),
+      el('button', { class: 'card__tool', title: 'Ajustes', 'aria-label': 'Ajustes', onclick: handlers.onToggleSettings }, ['⚙']),
 ```
 
 - [ ] **Step 9: Ligar tudo no `src/main.ts`**

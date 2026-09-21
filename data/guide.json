@@ -1,0 +1,359 @@
+{
+  "version": "1.0.0",
+  "source": "Aion 2 Level 1–45 Ultimate Speedrun Guide",
+  "legend": [
+    {
+      "id": "msq",
+      "label": "Main Story Quest (MSQ)",
+      "marker": "Yellow Arrows",
+      "color": "#d4a000",
+      "uiColor": "#f0c040"
+    },
+    {
+      "id": "side",
+      "label": "Side Quests",
+      "marker": "Green Arrows",
+      "color": "#2e7d32",
+      "uiColor": "#5cc46a"
+    },
+    {
+      "id": "seal",
+      "label": "Seal Dungeons",
+      "marker": "Orange Arrows",
+      "color": "#e65100",
+      "uiColor": "#ff8a3d"
+    },
+    {
+      "id": "kisk",
+      "label": "Kisks",
+      "marker": "Black Arrows",
+      "color": "#000000",
+      "uiColor": "#c8d0e0"
+    }
+  ],
+  "downtime": [
+    "Weapons (+5 max).",
+    "Accessories (+5 max).",
+    "Daevenation",
+    "Skills Upgrade primary damage skills",
+    "Stigmas",
+    "Titles Equip BIS titles",
+    "Achievements Claim completed achievements for stat/currency payouts"
+  ],
+  "phases": [
+    {
+      "id": "phase-1",
+      "title": "Phase 1",
+      "levelFrom": 1,
+      "levelTo": 9,
+      "parts": [
+        {
+          "id": "p1-1",
+          "title": "Levels 1–9",
+          "note": null,
+          "map": null,
+          "actions": [
+            {
+              "id": "p1-1-a1",
+              "text": "Follow core MSQ",
+              "tag": "msq",
+              "sub": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "title": "Phase 2",
+      "levelFrom": 10,
+      "levelTo": 16,
+      "parts": [
+        {
+          "id": "p2-1",
+          "title": "Part 1",
+          "note": null,
+          "map": {
+            "src": "maps/image3.webp",
+            "width": 1258,
+            "height": 882
+          },
+          "actions": [
+            {
+              "id": "p2-1-a1",
+              "text": "MSQ Push",
+              "tag": "msq",
+              "sub": []
+            },
+            {
+              "id": "p2-1-a2",
+              "text": "Seal DG Detour",
+              "tag": "seal",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "id": "p2-2",
+          "title": "Part 2",
+          "note": "You get your first lvl8 skills here!",
+          "map": {
+            "src": "maps/image7.webp",
+            "width": 1172,
+            "height": 928
+          },
+          "actions": [
+            {
+              "id": "p2-2-a1",
+              "text": "MSQ",
+              "tag": "msq",
+              "sub": []
+            },
+            {
+              "id": "p2-2-a2",
+              "text": "Seal DG",
+              "tag": "seal",
+              "sub": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "title": "Phase 3",
+      "levelFrom": 17,
+      "levelTo": 21,
+      "parts": [
+        {
+          "id": "p3-1",
+          "title": "Part 1",
+          "note": null,
+          "map": {
+            "src": "maps/image1.webp",
+            "width": 1248,
+            "height": 912
+          },
+          "actions": [
+            {
+              "id": "p3-1-a1",
+              "text": "Safe Haven: Take all the Green Quest’s and follow the pathing.",
+              "tag": "side",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "id": "p3-2",
+          "title": "Part 2",
+          "note": null,
+          "map": {
+            "src": "maps/image4.webp",
+            "width": 1071,
+            "height": 928
+          },
+          "actions": [
+            {
+              "id": "p3-2-a1",
+              "text": "Silent Hill: Focus on MSQ and do the 4 Seal dgs on the way!",
+              "tag": "seal",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "id": "p3-3",
+          "title": "Part 3",
+          "note": null,
+          "map": {
+            "src": "maps/image5.webp",
+            "width": 922,
+            "height": 928
+          },
+          "actions": [
+            {
+              "id": "p3-3-a1",
+              "text": "Safe Haven Pickup: End all the quests equip the new Accessories and make them all +5!",
+              "tag": null,
+              "sub": []
+            },
+            {
+              "id": "p3-3-a2",
+              "text": "Recall: Teleport back to turn in all remaining pending quests.",
+              "tag": null,
+              "sub": [
+                {
+                  "id": "p3-3-a2-s1",
+                  "text": "Gear Check: Equip all newly acquired Accessories (upgrade to +5) and equip the smite Title.",
+                  "tag": null,
+                  "sub": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "title": "Phase 4",
+      "levelFrom": 22,
+      "levelTo": 32,
+      "parts": [
+        {
+          "id": "p4-1",
+          "title": "Part 1",
+          "note": null,
+          "map": {
+            "src": "maps/image6.webp",
+            "width": 1050,
+            "height": 752
+          },
+          "actions": [
+            {
+              "id": "p4-1-a1",
+              "text": "Zone Entry: All we doing is MSQ and Seal dgs on the way!",
+              "tag": "seal",
+              "sub": [
+                {
+                  "id": "p4-1-a1-s1",
+                  "text": "After arrow 15 you get Ascension quest to get Stigmas!",
+                  "tag": null,
+                  "sub": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p4-2",
+          "title": "Part 2",
+          "note": null,
+          "map": {
+            "src": "maps/image8.webp",
+            "width": 1205,
+            "height": 681
+          },
+          "actions": [
+            {
+              "id": "p4-2-a1",
+              "text": "Follow the MSQ and do the last 3 Seal dgs (You won’t do anymore until 45)",
+              "tag": "seal",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "id": "p4-3",
+          "title": "Part 3",
+          "note": null,
+          "map": {
+            "src": "maps/image2.webp",
+            "width": 1064,
+            "height": 928
+          },
+          "actions": [
+            {
+              "id": "p4-3-a1",
+              "text": "Follow the MSQ and Take the Kisks it will save a lot of time for later stages!",
+              "tag": "kisk",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "id": "p4-4",
+          "title": "Part 4: Level 32 First Rune Unlock Chain",
+          "note": "After getting the Wings from Urugugu",
+          "map": null,
+          "actions": [
+            {
+              "id": "p4-4-a1",
+              "text": "Rune Chain Start: Teleport to Nornir Assembly → Head to the Left side of Nornir Assembly → Accept and complete the side quest (Hugo Mercs pt.2 quest chain).",
+              "tag": "side",
+              "sub": []
+            },
+            {
+              "id": "p4-4-a2",
+              "text": "Rune 1 Acquisition: Teleport to Abandoned Site → Accept and complete the local side quest to receive Rune 1.",
+              "tag": "side",
+              "sub": []
+            },
+            {
+              "id": "p4-4-a3",
+              "text": "Equip & Upgrade: Open Inventory → Socket Rune 1 → Upgrade Rune 1 to +1.",
+              "tag": null,
+              "sub": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "title": "Phase 5",
+      "levelFrom": 33,
+      "levelTo": 45,
+      "parts": [
+        {
+          "id": "p5-1",
+          "title": "Levels 33–45",
+          "note": null,
+          "map": null,
+          "actions": [
+            {
+              "id": "p5-1-a1",
+              "text": "Pure MSQ: From Level 33 onwards, focus 100% on Main Story Quests (MSQ). Only do green quests that coincide with the MSQ.",
+              "tag": "msq",
+              "sub": []
+            },
+            {
+              "id": "p5-1-a2",
+              "text": "3rd Ascension (The One Who Dreams): After completing your 3rd Ascension take the green quest (Hugo Mercs pt.3) in Briskwind Shelter and get your 2nd Rune.",
+              "tag": "side",
+              "sub": [
+                {
+                  "id": "p5-1-a2-s1",
+                  "text": "After that full MSQ! Enjoy!",
+                  "tag": "msq",
+                  "sub": []
+                }
+              ]
+            },
+            {
+              "id": "p5-1-a3",
+              "text": "MSQ (Powder of Death): After killing 5 Insectoids and finding 2 lost bags take kisk (Amunta’s Hideout)",
+              "tag": "kisk",
+              "sub": []
+            },
+            {
+              "id": "p5-1-a4",
+              "text": "MSQ (Lake of Confrontation): After searching the Blades Supply Storage, leave through the door, fly into the fog EAST and take kisk (Idun’s Lake)",
+              "tag": "kisk",
+              "sub": []
+            },
+            {
+              "id": "p5-1-a5",
+              "text": "MSQ (An Ill Fate’s Resolution): Before diving into the lake fly over and take kisk (Steel                  Hammer Temp. Trading Post",
+              "tag": "kisk",
+              "sub": []
+            },
+            {
+              "id": "p5-1-a6",
+              "text": "MSQ (Daybreak Society Rescue Operation): After talking to Nemon to go distract Black Claw soldiers, take kisk (Kumrica’s Cellar) continued below~",
+              "tag": "kisk",
+              "sub": [
+                {
+                  "id": "p5-1-a6-s1",
+                  "text": "In addition once you complete the instance atop the tree, when you must “talk to Nemon”    take kisk SOUTH (Impetusium Lower Path)",
+                  "tag": "kisk",
+                  "sub": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
