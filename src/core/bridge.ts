@@ -16,6 +16,13 @@ export type AionBridge = {
   setClickThrough(enabled: boolean): void
   minimize(): void
   close(): void
+  /**
+   * Registra o ouvinte das hotkeys globais. Não devolve como cancelar, e
+   * isso é deliberado: há uma janela só, um renderer só, e o ouvinte é
+   * registrado uma vez na abertura e vive o quanto o app viver. Não existe
+   * caminho de re-registro nem de desmontagem. Um disposer aqui seria API
+   * para um caso que não acontece.
+   */
   onHotkey(callback: (action: HotkeyAction) => void): void
 }
 

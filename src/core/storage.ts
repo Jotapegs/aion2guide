@@ -36,6 +36,8 @@ function webStore(): Store {
     try {
       return fn()
     } catch {
+      // Acesso bloqueado ou JSON corrompido. Devolver null é o mesmo que
+      // "não há nada gravado", e quem chama já sabe recomeçar do zero.
       return null
     }
   }

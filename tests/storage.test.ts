@@ -99,6 +99,34 @@ describe('createStore no Electron', () => {
     expect(bridge.loadProgress).toHaveBeenCalled()
   })
 
+  it('delega os ajustes para a ponte, não para o localStorage', async () => {
+    const bridge = {
+      loadProgress: vi.fn().mockResolvedValue(null),
+      saveProgress: vi.fn().mockResolvedValue(undefined),
+      loadSettings: vi.fn().mockResolvedValue(DEFAULT_SETTINGS),
+      saveSettings: vi.fn().mockResolvedValue(undefined),
+      setOpacity: vi.fn(),
+      setClickThrough: vi.fn(),
+      minimize: vi.fn(),
+      close: vi.fn(),
+      onHotkey: vi.fn(),
+    }
+    const fake = fakeLocalStorage()
+    vi.stubGlobal('window', { aion: bridge })
+    vi.stubGlobal('localStorage', fake.store)
+
+    const store = createStore()
+    const settings = { ...DEFAULT_SETTINGS, opacity: 0.44 }
+    await store.saveSettings(settings)
+    expect(bridge.saveSettings).toHaveBeenCalledWith(settings)
+    expect(await store.loadSettings()).toEqual(DEFAULT_SETTINGS)
+    expect(bridge.loadSettings).toHaveBeenCalled()
+    // Havendo ponte, o localStorage não pode ser tocado: no Electron os
+    // ajustes moram em disco, e gravar nos dois lugares criaria duas
+    // verdades que divergem na primeira vez que uma falha.
+    expect(fake.store.getItem(SETTINGS_KEY)).toBeNull()
+  })
+
   it('cai para null se a ponte falhar', async () => {
     const bridge = {
       loadProgress: vi.fn().mockRejectedValue(new Error('disco cheio')),
@@ -115,5 +143,7 @@ describe('createStore no Electron', () => {
     const store = createStore()
     expect(await store.loadProgress()).toBeNull()
     await expect(store.saveProgress(progress)).resolves.toBeUndefined()
+    expect(await store.loadSettings()).toBeNull()
+    await expect(store.saveSettings(DEFAULT_SETTINGS)).resolves.toBeUndefined()
   })
 })
