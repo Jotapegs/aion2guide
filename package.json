@@ -1,7 +1,7 @@
 {
   "name": "aion2guide",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Overlay de guia de leveling 1-45 para Aion 2",
   "author": "Jotapegs",
   "type": "module",
