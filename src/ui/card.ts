@@ -10,6 +10,7 @@ export type CardHandlers = {
   onToggleMap(): void
   onToggleNav(): void
   onToggleRef(): void
+  onToggleSettings(): void
   onClose(): void
 }
 
@@ -74,6 +75,12 @@ export function renderCard(
         'aria-label': 'Referência',
         onclick: handlers.onToggleRef,
       }, ['?']),
+      el('button', {
+        class: 'card__tool',
+        title: 'Ajustes',
+        'aria-label': 'Ajustes',
+        onclick: handlers.onToggleSettings,
+      }, ['⚙']),
       el('button', {
         class: 'card__tool',
         title: 'Fechar',

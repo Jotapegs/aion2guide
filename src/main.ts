@@ -6,19 +6,31 @@ import rawGuide from '../data/guide.json'
 import { parseGuide } from './core/guide'
 import {
   type Progress,
-  normalizeProgress, nextPart, previousPart, toggleAction, completeCurrent, currentFlatPart, goToPart,
+  normalizeProgress, nextPart, previousPart, toggleAction, completeCurrent, currentFlatPart, goToPart, resetProgress,
 } from './core/progress'
 import { createStore } from './core/storage'
 import { getBridge } from './core/bridge'
+import type { HotkeyAction } from './core/bridge'
+import { type Settings, DEFAULT_SETTINGS, normalizeSettings } from './core/settings'
 import { renderCard, type CardHandlers } from './ui/card'
 import { toggleMap, closeMap, isMapOpen } from './ui/mapModal'
-import { toggleNavPanel, toggleRefPanel, closePanel, isPanelOpen } from './ui/panels'
+import { toggleNavPanel, toggleRefPanel, toggleSettingsPanel, closePanel, isPanelOpen } from './ui/panels'
 
 const guide = parseGuide(rawGuide)
 const store = createStore()
 const root = document.querySelector<HTMLElement>('#overlay')!
 
 let progress: Progress = normalizeProgress(guide, null)
+let settings: Settings = { ...DEFAULT_SETTINGS }
+
+/** Aplica os ajustes na janela e persiste. */
+function applySettings(next: Settings): void {
+  settings = next
+  const bridge = getBridge()
+  bridge?.setOpacity(settings.opacity)
+  bridge?.setClickThrough(settings.clickThrough)
+  void store.saveSettings(settings)
+}
 
 /** Aplica uma transição, redesenha e persiste. */
 function update(next: Progress): void {
@@ -42,6 +54,15 @@ const handlers: CardHandlers = {
   },
   onToggleNav: () => toggleNavPanel(guide, progress, (id) => update(goToPart(guide, progress, id))),
   onToggleRef: () => toggleRefPanel(guide),
+  onToggleSettings: () =>
+    toggleSettingsPanel(settings, {
+      onOpacity: (value) => applySettings({ ...settings, opacity: value }),
+      onClickThrough: (enabled) => applySettings({ ...settings, clickThrough: enabled }),
+      onReset: () => {
+        closePanel()
+        update(resetProgress(guide))
+      },
+    }),
   onClose: () => getBridge()?.close(),
 }
 
@@ -58,7 +79,12 @@ function applyLegendColors(): void {
 
 async function start(): Promise<void> {
   applyLegendColors()
-  progress = normalizeProgress(guide, await store.loadProgress())
+  const [progressoSalvo, ajustesSalvos] = await Promise.all([
+    store.loadProgress(),
+    store.loadSettings(),
+  ])
+  progress = normalizeProgress(guide, progressoSalvo)
+  applySettings(normalizeSettings(ajustesSalvos))
   render()
 }
 
@@ -67,6 +93,18 @@ window.addEventListener('keydown', (e) => {
   // O mapa fica por cima dos painéis, então fecha primeiro.
   if (isMapOpen()) closeMap()
   else if (isPanelOpen()) closePanel()
+})
+
+getBridge()?.onHotkey((action: HotkeyAction) => {
+  if (action === 'next') update(nextPart(guide, progress))
+  else if (action === 'prev') update(previousPart(guide, progress))
+  else if (action === 'complete') update(completeCurrent(guide, progress))
+  else if (action === 'map') handlers.onToggleMap()
+  else if (action === 'clickthrough') {
+    applySettings({ ...settings, clickThrough: !settings.clickThrough })
+  }
+  // 'hide' é tratado no processo principal: com a janela escondida, o
+  // renderer não poderia responder para trazê-la de volta.
 })
 
 void start()

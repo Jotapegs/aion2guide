@@ -63,9 +63,14 @@ describe('fiação da casca Electron', () => {
     expect(faltando).toEqual([])
   })
 
-  it('o preload já escuta o canal de hotkey', () => {
-    // Quem envia é o processo principal, e isso chega junto com o
-    // registro das hotkeys globais. O ouvinte precisa existir antes.
+  it('o canal de hotkey que o principal envia é o que o preload escuta', () => {
+    expect(mainTs).toContain("send('aion:hotkey'")
     expect(preloadTs).toContain("on('aion:hotkey'")
+  })
+
+  it('a ação hide é resolvida no processo principal, não repassada', () => {
+    // Com a janela escondida o renderer não poderia responder para
+    // trazê-la de volta.
+    expect(mainTs).toContain("action === 'hide'")
   })
 })

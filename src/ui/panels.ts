@@ -1,8 +1,11 @@
 import { type Guide, flattenParts } from '../core/guide'
 import type { Progress } from '../core/progress'
 import { el } from './dom'
+import { type Settings, OPACITY_MIN, OPACITY_MAX } from '../core/settings'
+import { HOTKEYS, HOTKEY_LABELS, formatAccelerator } from '../core/hotkeys'
+import type { HotkeyAction } from '../core/bridge'
 
-type PanelKind = 'nav' | 'ref'
+type PanelKind = 'nav' | 'ref' | 'settings'
 
 let panel: HTMLElement | null = null
 let openKind: PanelKind | null = null
@@ -99,5 +102,61 @@ export function toggleRefPanel(guide: Guide): void {
     ])
 
     mount('ref', 'Referência', [legend, downtime])
+  })
+}
+
+export type SettingsHandlers = {
+  onOpacity(value: number): void
+  onClickThrough(enabled: boolean): void
+  onReset(): void
+}
+
+export function toggleSettingsPanel(settings: Settings, handlers: SettingsHandlers): void {
+  toggle('settings', () => {
+    const slider = el('input', {
+      class: 'panel__slider',
+      type: 'range',
+      min: String(OPACITY_MIN),
+      max: String(OPACITY_MAX),
+      step: '0.01',
+      value: String(settings.opacity),
+      'aria-label': 'Opacidade da janela',
+    }) as HTMLInputElement
+    slider.addEventListener('input', () => handlers.onOpacity(Number(slider.value)))
+
+    const check = el('input', { class: 'panel__check', type: 'checkbox' }) as HTMLInputElement
+    check.checked = settings.clickThrough
+    check.addEventListener('change', () => handlers.onClickThrough(check.checked))
+
+    mount('settings', 'Ajustes', [
+      el('div', { class: 'panel__group' }, [
+        el('h3', { class: 'panel__group-title' }, ['Opacidade']),
+        el('div', { class: 'panel__row' }, [slider]),
+      ]),
+      el('div', { class: 'panel__group' }, [
+        el('h3', { class: 'panel__group-title' }, ['Janela']),
+        el('label', { class: 'panel__row' }, [
+          check,
+          el('span', {}, ['Cliques atravessam o overlay']),
+        ]),
+      ]),
+      el('div', { class: 'panel__group' }, [
+        el('h3', { class: 'panel__group-title' }, ['Atalhos globais']),
+        ...(Object.entries(HOTKEYS) as [HotkeyAction, string][]).map(([action, accelerator]) =>
+          el('div', { class: 'panel__hotkey' }, [
+            el('kbd', {}, [formatAccelerator(accelerator)]),
+            el('span', {}, [HOTKEY_LABELS[action]]),
+          ]),
+        ),
+      ]),
+      el('div', { class: 'panel__group' }, [
+        el('button', {
+          class: 'panel__danger',
+          onclick: () => {
+            if (confirm('Apagar todo o progresso e recomeçar do nível 1?')) handlers.onReset()
+          },
+        }, ['Resetar o progresso']),
+      ]),
+    ])
   })
 }

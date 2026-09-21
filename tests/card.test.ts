@@ -27,6 +27,7 @@ const handlers: CardHandlers = {
   onToggleMap: () => {},
   onToggleNav: () => {},
   onToggleRef: () => {},
+  onToggleSettings: () => {},
   onClose: () => {},
 }
 
