@@ -120,7 +120,10 @@ export function renderCard(
     el('div', { class: 'meter' }, [
       el('span', {}, [`${index + 1}/${total}`]),
       el('div', { class: 'meter__track' }, [
-        el('div', { class: 'meter__fill', style: `width: ${(completed / total) * 100}%` }),
+        el('div', {
+          class: 'meter__fill',
+          style: `transform: scaleX(${total === 0 ? 0 : completed / total})`,
+        }),
       ]),
       el('span', {}, [`${completed} feitas`]),
     ]),

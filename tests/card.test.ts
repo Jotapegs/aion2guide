@@ -115,6 +115,18 @@ describe('card contra o guia real', () => {
     expect(text('.meter')).toContain(`1/${total}`)
   })
 
+  it('a barra de progresso cresce por transform, não por largura', () => {
+    // Animar `width` daria layout a cada quadro, e este app desenha sobre
+    // um jogo. A barra começa vazia e vai até a fração concluída.
+    const fill = () => q('.meter__fill')!
+    expect(fill().style.transform).toBe('scaleX(0)')
+    expect(fill().style.width).toBe('')
+
+    button('CONCLUIR').click()
+    const total = flattenParts(guide).length
+    expect(fill().style.transform).toBe(`scaleX(${1 / total})`)
+  })
+
   it('o botão do mapa só habilita nas parts que têm mapa', () => {
     // A Fase 1 não tem mapa no documento; a Part 1 da Fase 2 tem.
     expect((button('🗺') as HTMLButtonElement).disabled).toBe(true)
