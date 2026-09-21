@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-electron/
+release/
+.vite/
+
+# saída do importador — regenerável a partir do .docx
+public/maps/
+
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
