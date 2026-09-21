@@ -868,9 +868,13 @@ import('./scripts/lib/docx.mjs').then(async (m) => {
 })
 "
 ```
-Expected: `blocos: 62`, `com imagem: 8`, `tabelas: 1`, `headings: 17`.
+Expected: `blocos: 61`, `com imagem: 8`, `tabelas: 1`, `headings: 17`.
 
 Se algum número divergir, o parser está errado — não siga em frente.
+
+Sobre o 61: o `<w:body>` tem 62 filhos diretos, mas o último é um `<w:sectPr>`,
+que descreve a página (margens, tamanho) e não é conteúdo. `parseDocument`
+considera bloco apenas `w:p` e `w:tbl`, então 60 parágrafos mais 1 tabela dão 61.
 
 - [ ] **Step 7: Commit**
 
