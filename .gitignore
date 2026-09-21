@@ -12,3 +12,5 @@ public/maps/
 Thumbs.db
 .env
 .env.local
+release/
+build/icon.ico
