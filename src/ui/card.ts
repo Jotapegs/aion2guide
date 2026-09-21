@@ -7,6 +7,7 @@ export type CardHandlers = {
   onNext(): void
   onComplete(): void
   onToggleAction(actionId: string): void
+  onToggleMap(): void
   onClose(): void
 }
 
@@ -52,6 +53,13 @@ export function renderCard(
       // Botão de ícone precisa de aria-label: o título é dica visual, e o
       // nome acessível sai do conteúdo — um leitor de tela anunciaria o
       // glifo ✕ em vez de "Fechar".
+      el('button', {
+        class: 'card__tool',
+        title: part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        'aria-label': part.map ? 'Ver o mapa' : 'Esta part não tem mapa',
+        disabled: part.map === null,
+        onclick: handlers.onToggleMap,
+      }, ['🗺']),
       el('button', {
         class: 'card__tool',
         title: 'Fechar',

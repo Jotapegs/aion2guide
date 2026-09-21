@@ -24,6 +24,7 @@ const handlers: CardHandlers = {
   onNext: () => draw(nextPart(guide, progress)),
   onComplete: () => draw(completeCurrent(guide, progress)),
   onToggleAction: (id) => draw(toggleAction(guide, progress, id)),
+  onToggleMap: () => {},
   onClose: () => {},
 }
 
@@ -109,6 +110,13 @@ describe('card contra o guia real', () => {
     const total = flattenParts(guide).length
     expect(total).toBe(11)
     expect(text('.meter')).toContain(`1/${total}`)
+  })
+
+  it('o botão do mapa só habilita nas parts que têm mapa', () => {
+    // A Fase 1 não tem mapa no documento; a Part 1 da Fase 2 tem.
+    expect((button('🗺') as HTMLButtonElement).disabled).toBe(true)
+    draw(goToPart(guide, progress, 'p2-1'))
+    expect((button('🗺') as HTMLButtonElement).disabled).toBe(false)
   })
 
   it('todo botão de ícone tem nome acessível', () => {
