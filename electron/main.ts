@@ -1,8 +1,11 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'node:path'
 
 import { createFileStore } from './store'
-import { createOverlayWindow, sanitizeBounds, type WindowBounds } from './window'
+import {
+  createOverlayWindow, sanitizeBounds, resizedBounds,
+  EXPANDED_WIDTH, EXPANDED_HEIGHT, type WindowBounds,
+} from './window'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import type { HotkeyAction } from '../src/core/bridge'
 
@@ -22,6 +25,31 @@ function watchBounds(window: BrowserWindow): void {
   window.on('resize', save)
 }
 
+/**
+ * O tamanho compacto de antes de abrir o mapa. Guardado para devolver a
+ * janela exatamente ao que o usuário tinha, inclusive se ele a
+ * redimensionou.
+ */
+let compacto: WindowBounds | null = null
+
+function alternarMapa(open: boolean): void {
+  if (!win || win.isDestroyed()) return
+  const atual = win.getBounds()
+  const area = screen.getDisplayMatching(atual).workArea
+
+  if (open) {
+    // Reabrir com o mapa já aberto não pode sobrescrever o compacto
+    // guardado com o tamanho expandido.
+    if (compacto === null) compacto = atual
+    win.setBounds(resizedBounds(atual, { width: EXPANDED_WIDTH, height: EXPANDED_HEIGHT }, area))
+    return
+  }
+
+  const alvo = compacto ?? atual
+  compacto = null
+  win.setBounds(resizedBounds(atual, { width: alvo.width, height: alvo.height }, area))
+}
+
 function registerIpc(): void {
   ipcMain.handle('aion:loadProgress', () => store.read('progress'))
   ipcMain.handle('aion:saveProgress', (_e, progress) => store.write('progress', progress))
@@ -32,6 +60,7 @@ function registerIpc(): void {
     // forward mantém o hover chegando enquanto os cliques atravessam.
     win?.setIgnoreMouseEvents(enabled, { forward: true })
   })
+  ipcMain.on('aion:setMapOpen', (_e, open: boolean) => alternarMapa(open))
   ipcMain.on('aion:minimize', () => win?.minimize())
   ipcMain.on('aion:close', () => win?.close())
 }

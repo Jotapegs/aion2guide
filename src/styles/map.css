@@ -1,13 +1,75 @@
-.map {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  background: var(--glass-strong);
-  backdrop-filter: blur(8px);
+/* O overlay é uma linha: mapa à esquerda, card à direita. Com o mapa
+   fechado sobra só o card, que ocupa a janela inteira. */
+#overlay {
+  display: flex;
+  height: 100vh;
+  min-width: 0;
+  /* A folga é onde a alça vive. Com o mapa fechado não há folga: o card
+     ocupa a janela inteira. */
+  gap: 6px;
+}
+
+#card {
+  flex: 1 1 auto;
+  /* Abaixo disso o texto do guia, que tem linhas longas, vira coluna
+     estreita e ilegível. A alça respeita este piso. */
+  min-width: 260px;
+  min-height: 0;
+}
+
+#mapside {
+  flex: 0 0 var(--map-split, 60%);
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 8px;
   gap: 6px;
+  padding: 8px;
+  position: relative;
+  /* Mesmo vidro do card: sem isto o painel fica transparente e o mapa
+     parece pousado direto na área de trabalho, com a legenda ilegível
+     por cima do que estiver atrás. */
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  /* Sem overflow hidden: a alça fica propositalmente para fora, na folga
+     entre os dois painéis, e seria cortada. */
+}
+
+#mapside[hidden] {
+  display: none;
+}
+
+.map__bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.map__caption {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map__btn {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.map__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
 }
 
 .map__stage {
@@ -16,6 +78,7 @@
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid var(--stroke);
+  background: rgba(0, 0, 0, 0.25);
   display: grid;
   place-items: center;
   /* aspect-ratio vem das dimensões reais da imagem, definido em JS. */
@@ -32,16 +95,38 @@
   image-rendering: -webkit-optimize-contrast;
 }
 
-.map__caption {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  color: var(--text-dim);
-  font-size: 11px;
-  padding: 0 2px;
+/* A alça vive na borda direita do painel, encostada no card. */
+.map__alca {
+  position: absolute;
+  top: 0;
+  /* Fica na folga entre os dois painéis, transbordando o próprio, para
+     a área de arrasto cobrir o vão inteiro. */
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  z-index: 1;
+  cursor: col-resize;
+  /* Alvo de toque confortável sem uma faixa larga e feia: a barra
+     visível tem 2px, a área que responde tem 12. */
+  display: grid;
+  place-items: center;
 }
 
-.map__hint {
-  margin-left: auto;
-  opacity: 0.7;
+.map__alca::after {
+  content: '';
+  width: 2px;
+  height: 36px;
+  border-radius: 1px;
+  background: var(--stroke-strong);
+}
+
+.map__alca:hover::after,
+.map__alca:focus-visible::after {
+  background: var(--accent);
+  height: 100%;
+  border-radius: 0;
+}
+
+.map__alca:focus-visible {
+  outline: none;
 }

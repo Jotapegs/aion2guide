@@ -1,7 +1,9 @@
 .card {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* 100% e não 100vh: o card agora é coluna de um flex que divide a
+     janela com o mapa, e 100vh o faria transbordar do próprio pai. */
+  height: 100%;
   background: var(--glass);
   /* Não faz efeito sobre a área de trabalho numa janela transparente, mas
      vale quando o app roda numa aba de navegador na segunda tela. */

@@ -13,12 +13,13 @@ import { getBridge } from './core/bridge'
 import type { HotkeyAction } from './core/bridge'
 import { type Settings, DEFAULT_SETTINGS, normalizeSettings } from './core/settings'
 import { renderCard, type CardHandlers } from './ui/card'
-import { toggleMap, closeMap, isMapOpen } from './ui/mapModal'
+import { initMap, toggleMap, closeMap, isMapOpen } from './ui/mapModal'
 import { toggleNavPanel, toggleRefPanel, toggleSettingsPanel, closePanel, isPanelOpen } from './ui/panels'
 
 const guide = parseGuide(rawGuide)
 const store = createStore()
-const root = document.querySelector<HTMLElement>('#overlay')!
+const root = document.querySelector<HTMLElement>('#card')!
+const mapHost = document.querySelector<HTMLElement>('#mapside')!
 
 let progress: Progress = normalizeProgress(guide, null)
 let settings: Settings = { ...DEFAULT_SETTINGS }
@@ -90,12 +91,19 @@ async function start(): Promise<void> {
   ])
   progress = normalizeProgress(guide, progressoSalvo)
   applySettings(normalizeSettings(ajustesSalvos))
+  initMap(mapHost, settings.mapSplit, {
+    // A janela só cresce quando há casca; no navegador o mapa divide o
+    // espaço que já existe.
+    onOpenChange: (open) => getBridge()?.setMapOpen(open),
+    onSplitChange: (mapSplit) => applySettings({ ...settings, mapSplit }),
+  })
   render()
 }
 
 window.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return
-  // O mapa fica por cima dos painéis, então fecha primeiro.
+  // Fecha o mapa antes dos painéis: ele é o que ocupa mais tela,
+  // então é o que a pessoa quer dispensar primeiro.
   if (isMapOpen()) closeMap()
   else if (isPanelOpen()) closePanel()
 })

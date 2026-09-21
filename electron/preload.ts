@@ -10,6 +10,7 @@ const bridge: AionBridge = {
   saveSettings: (settings) => ipcRenderer.invoke('aion:saveSettings', settings),
   setOpacity: (value) => ipcRenderer.send('aion:setOpacity', value),
   setClickThrough: (enabled) => ipcRenderer.send('aion:setClickThrough', enabled),
+  setMapOpen: (open) => ipcRenderer.send('aion:setMapOpen', open),
   minimize: () => ipcRenderer.send('aion:minimize'),
   close: () => ipcRenderer.send('aion:close'),
   onHotkey: (callback) => {

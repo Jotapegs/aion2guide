@@ -14,6 +14,12 @@ export type AionBridge = {
   saveSettings(settings: Settings): Promise<void>
   setOpacity(value: number): void
   setClickThrough(enabled: boolean): void
+  /**
+   * Avisa a casca que o mapa abriu ou fechou, para ela crescer e voltar
+   * ao tamanho compacto. O núcleo não sabe de pixels de janela: só diz
+   * o que aconteceu, e quem decide geometria é o processo principal.
+   */
+  setMapOpen(open: boolean): void
   minimize(): void
   close(): void
   /**

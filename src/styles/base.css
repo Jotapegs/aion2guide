@@ -1,11 +1,15 @@
 :root {
-  /* A opacidade faz todo o trabalho de legibilidade: numa janela
-     transparente do Electron o backdrop-filter não tem o que desfocar,
-     porque atrás da página está a área de trabalho, fora do alcance dele.
-     Verificado numa captura do app rodando. Quem quiser mais translúcido
-     usa o controle de opacidade nos ajustes, que age na janela inteira. */
-  --glass: rgba(13, 16, 23, 0.96);
-  --glass-strong: rgba(13, 16, 23, 0.99);
+  /* Opaco de propósito. Numa janela transparente do Electron o
+     backdrop-filter não tem o que desfocar — atrás da página está a área
+     de trabalho, fora do alcance dele —, então qualquer alfa aqui vira
+     vazamento nítido: a 0.96 o texto branco do que estava atrás ainda
+     fantasmava por cima do guia. Medido numa captura do app rodando.
+
+     A translucidez vem do controle de opacidade nos ajustes, que age na
+     janela inteira. Uma alavanca só, e ajustável, em vez de duas
+     transparências multiplicadas. */
+  --glass: #0d1017;
+  --glass-strong: #0d1017;
   --stroke: rgba(255, 255, 255, 0.1);
   --stroke-strong: rgba(255, 255, 255, 0.18);
   --text: #e9edf5;

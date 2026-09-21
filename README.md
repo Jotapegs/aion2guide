@@ -38,11 +38,23 @@ Nos botões do cabeçalho: 🗺 abre o mapa da part (desabilitado nas três que 
 têm), ☰ lista todas as parts para pular direto, `?` mostra a legenda das cores e
 a lista de downtime, ⚙ tem opacidade, click-through e reset.
 
+**O mapa abre ao lado, não por cima.** A janela cresce para caber os dois, com a
+borda direita ancorada — o card não sai do lugar, é o espaço à esquerda que
+aparece. A alça entre os dois decide quanto cada um ocupa, por arrasto ou pelas
+setas do teclado, e a proporção fica salva. No painel do mapa há `−`, `⟲` e `+`
+para o zoom, que também responde à roda do mouse; com zoom, arrastar move a
+imagem.
+
 **Navegar nunca marca nada.** Dá para percorrer o guia inteiro para frente e
 para trás sem tocar no progresso; só o botão CONCLUIR e as caixinhas das ações
 escrevem. É a regra central do app e tem teste para ela.
 
-O progresso fica em `%APPDATA%/Aion 2 Guide/progress.json`.
+O progresso fica em `%APPDATA%\Aion 2 Guide\progress.json`.
+
+Rodando pelo código, sem empacotar, o caminho é outro: `%APPDATA%\aion2guide\`.
+O Electron usa o `name` do `package.json` quando o app não está empacotado, e o
+`productName` quando está. Vale saber antes de procurar o arquivo no lugar
+errado.
 
 ## Segunda tela
 
@@ -64,7 +76,7 @@ navegador, separado do progresso do app.
 npm install
 npm run extract      # uma vez, para gerar public/maps/
 npm run dev          # servidor de desenvolvimento e a janela Electron
-npm test             # a suíte: 176 testes
+npm test             # a suíte: 201 testes
 npm run build        # checa os tipos e empacota o núcleo web
 npm run dist         # gera o instalador e o portátil em release/
 ```
@@ -114,8 +126,11 @@ detecta a ponte em tempo de execução, e `electron/` não sabe nada sobre o gui
 
 ### Uma nota sobre o vidro
 
-O `backdrop-filter` do card não desfoca nada quando o app roda como janela
-transparente: atrás da página está a área de trabalho, fora do alcance dele.
-Quem carrega a legibilidade é a opacidade de fundo, e o controle nos ajustes
-age na janela inteira. Na segunda tela, dentro de uma aba, o desfoque volta a
-valer.
+O `backdrop-filter` dos painéis não desfoca nada quando o app roda como janela
+transparente: atrás da página está a área de trabalho, fora do alcance dele. Na
+segunda tela, dentro de uma aba, ele volta a valer.
+
+Por isso os painéis são **opacos** no CSS, e a translucidez vem inteira do
+controle de opacidade nos ajustes, que age na janela. Uma alavanca só: com alfa
+no CSS *e* opacidade de janela, as duas se multiplicam e o texto do que está
+atrás fantasma por cima do guia.

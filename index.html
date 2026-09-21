@@ -6,7 +6,13 @@
     <title>Aion 2 Speedrun</title>
   </head>
   <body>
-    <div id="overlay"></div>
+    <!-- O mapa é irmão do card, não filho: renderCard esvazia o seu
+         próprio nó a cada mudança, e um mapa lá dentro seria destruído
+         junto no meio de um arrasto. -->
+    <div id="overlay">
+      <aside id="mapside" hidden></aside>
+      <div id="card"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

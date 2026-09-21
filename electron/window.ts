@@ -7,7 +7,41 @@ const MIN_WIDTH = 280
 const MIN_HEIGHT = 160
 const MARGIN = 24
 
+/** Tamanho com o mapa ao lado. Largo porque os mapas têm mais de 1000px
+ *  de largura e setas numeradas pequenas; alto porque 240px mostraria
+ *  uma tira do mapa e nada mais. */
+export const EXPANDED_WIDTH = 920
+export const EXPANDED_HEIGHT = 520
+
 export type WindowBounds = { x: number; y: number; width: number; height: number }
+export type Area = { x: number; y: number; width: number; height: number }
+
+/**
+ * Onde a janela deve ficar ao mudar de tamanho.
+ *
+ * Ancora a borda direita: o overlay nasce encostado no canto direito, e
+ * crescer para aquele lado o jogaria para fora da tela. Mantendo a
+ * direita parada, o card não sai do lugar quando o mapa abre — é o
+ * espaço à esquerda que aparece.
+ *
+ * Se não couber à esquerda, desliza para caber, o que na prática é
+ * crescer para a direita. Melhor que ficar metade fora da tela.
+ */
+export function resizedBounds(current: WindowBounds, size: { width: number; height: number }, area: Area): WindowBounds {
+  const direita = current.x + current.width
+  let x = direita - size.width
+  let y = current.y
+
+  // Não deixa passar da borda esquerda nem da direita da área útil.
+  x = Math.max(area.x, Math.min(x, area.x + area.width - size.width))
+  y = Math.max(area.y, Math.min(y, area.y + area.height - size.height))
+
+  // Janela maior que a tela: encosta no canto e deixa o resto sobrar.
+  if (size.width >= area.width) x = area.x
+  if (size.height >= area.height) y = area.y
+
+  return { x, y, width: size.width, height: size.height }
+}
 
 /** Canto superior direito da tela principal, com uma margem. */
 function defaultBounds(): WindowBounds {

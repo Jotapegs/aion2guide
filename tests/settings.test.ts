@@ -1,10 +1,26 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSettings, DEFAULT_SETTINGS, OPACITY_MIN, OPACITY_MAX } from '../src/core/settings'
+import {
+  normalizeSettings, DEFAULT_SETTINGS,
+  OPACITY_MIN, OPACITY_MAX, MAP_SPLIT_MIN, MAP_SPLIT_MAX,
+} from '../src/core/settings'
 
 describe('normalizeSettings', () => {
   it('aceita ajustes válidos', () => {
-    const s = { schemaVersion: 1, opacity: 0.7, clickThrough: true }
+    const s = { schemaVersion: 1, opacity: 0.7, clickThrough: true, mapSplit: 0.5 }
     expect(normalizeSettings(s)).toEqual(s)
+  })
+
+  it('completa um campo que falta com o padrão', () => {
+    // Um arquivo gravado por uma versão anterior não tem mapSplit.
+    const antigo = { schemaVersion: 1, opacity: 0.7, clickThrough: true }
+    expect(normalizeSettings(antigo).mapSplit).toBe(DEFAULT_SETTINGS.mapSplit)
+  })
+
+  it('limita a proporção do mapa à faixa utilizável', () => {
+    expect(normalizeSettings({ schemaVersion: 1, opacity: 1, clickThrough: false, mapSplit: 0.01 }).mapSplit)
+      .toBe(MAP_SPLIT_MIN)
+    expect(normalizeSettings({ schemaVersion: 1, opacity: 1, clickThrough: false, mapSplit: 9 }).mapSplit)
+      .toBe(MAP_SPLIT_MAX)
   })
 
   it('usa o padrão para lixo', () => {

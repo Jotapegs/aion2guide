@@ -58,7 +58,7 @@ describe('fiação da casca Electron', () => {
     const corpo = bridgeTs.slice(bridgeTs.indexOf('export type AionBridge'))
     const metodos = [...corpo.matchAll(/^\s{2}(\w+)\(/gm)].map((m) => m[1])
     expect(metodos).toContain('onHotkey')
-    expect(metodos.length).toBe(9)
+    expect(metodos.length).toBe(10)
     const faltando = metodos.filter((m) => !preloadTs.includes(`${m}:`))
     expect(faltando).toEqual([])
   })
